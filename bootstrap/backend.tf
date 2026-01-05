@@ -2,7 +2,7 @@
 
 variable "region" {
   type        = string
-  default     = "eu-west-2"
+  default     = "ap-southeast-2"
   description = "AWS region"
 }
 
@@ -21,14 +21,16 @@ provider "aws" {
   region = var.region
   default_tags {
     tags = {
-      "owner" : "trevolution"
+      "umccr-org:Creator": "terraform"
+      "umccr-org:Product": "k8tre"
+      "umccr-org:Source": "https://github.com/umccr/k8tre-aws"
     }
   }
 }
 
 resource "aws_s3_bucket" "bucket" {
   # Generate a random bucket name, e.g. `openssl rand -hex 8`
-  bucket = "k8tre-tfstate-0123456789abcdef"
+  bucket = "tfstate-k8tre-dev-ff5e2f01a9f253fc"
 }
 
 resource "aws_s3_bucket_versioning" "bucket_versioning" {
@@ -38,10 +40,35 @@ resource "aws_s3_bucket_versioning" "bucket_versioning" {
   }
 }
 
-resource "aws_s3_bucket_public_access_block" "public-block" {
+resource "aws_s3_bucket_public_access_block" "public_block" {
   bucket                  = aws_s3_bucket.bucket.id
   block_public_acls       = true
   block_public_policy     = true
   ignore_public_acls      = true
   restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_policy" "ssl_only" {
+  bucket = aws_s3_bucket.bucket.id
+  policy = data.aws_iam_policy_document.ssl_only.json
+}
+
+data "aws_iam_policy_document" "ssl_only" {
+  statement {
+    principals {
+      identifiers = ["*"]
+      type = "*"
+    }
+    actions = ["s3:*"]
+    effect = "Deny"
+    condition {
+      test     = "Bool"
+      values = ["false"]
+      variable = "aws:SecureTransport"
+    }
+    resources = [
+      aws_s3_bucket.bucket.arn,
+      "${aws_s3_bucket.bucket.arn}/*",
+    ]
+  }
 }

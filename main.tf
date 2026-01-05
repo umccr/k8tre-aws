@@ -2,7 +2,7 @@
 variable "region" {
   type        = string
   description = "AWS region"
-  default     = "eu-west-2"
+  default     = "ap-southeast-2"
 }
 
 variable "vpc_name" {
@@ -61,16 +61,18 @@ terraform {
   backend "s3" {
     bucket       = "k8tre-tfstate-0123456789abcdef"
     key          = "tfstate/dev/k8tre-dev"
-    region       = "eu-west-2"
+    region       = var.region
     use_lockfile = true
   }
 }
 
 provider "aws" {
-  region = "eu-west-2"
+  region = var.region
   default_tags {
     tags = {
-      "owner" : "trevolution"
+      "umccr-org:Creator": "terraform"
+      "umccr-org:Product": "k8tre"
+      "umccr-org:Source": "https://github.com/umccr/k8tre-aws"
     }
   }
 }

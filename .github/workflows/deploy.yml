@@ -21,7 +21,7 @@ jobs:
 
     env:
       AWS_ACCOUNT_ID: "000000000000"
-      AWS_REGION: eu-west-2
+      AWS_REGION: ap-southeast-2
       GITHUB_OIDC_ROLE: k8tre-dev-github-oidc
       # TERRAFORM_DEPLOY_COMMAND: plan
       TERRAFORM_DEPLOY_COMMAND: "apply -auto-approve"
@@ -39,7 +39,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: "arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/${{ env.GITHUB_OIDC_ROLE }}"
-          aws-region: eu-west-2
+          aws-region: ap-southeast-2
 
       # - name: Set AWS region
       #   run: |

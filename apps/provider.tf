@@ -20,9 +20,9 @@ terraform {
 
   # Must match aws_s3_bucket.bucket in ../bootstrap/backend.tf
   backend "s3" {
-    bucket       = "k8tre-tfstate-0123456789abcdef"
+    bucket       = "tfstate-k8tre-dev-ff5e2f01a9f253fc"
     key          = "tfstate/dev/k8tre-dev-apps"
-    region       = "eu-west-2"
+    region       = "ap-southeast-2"
     use_lockfile = true
   }
 }

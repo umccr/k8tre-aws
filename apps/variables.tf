@@ -1,12 +1,17 @@
+variable "region" {
+  type        = string
+  default     = "ap-southeast-2"
+  description = "AWS region"
+}
 
 # Update this to point to your terraform state from ../main.tf
 data "terraform_remote_state" "k8tre" {
   backend = "s3"
 
   config = {
-    bucket = "k8tre-tfstate-0123456789abcdef"
+    bucket = "tfstate-k8tre-dev-ff5e2f01a9f253fc"
     key    = "tfstate/dev/k8tre-dev"
-    region = "eu-west-2"
+    region = var.region
   }
 }
 

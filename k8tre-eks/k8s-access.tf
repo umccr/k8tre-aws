@@ -3,11 +3,19 @@
 # Allow GitHub workflows to access AWS using OIDC (no hardcoded credentials)
 # https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/configuring-openid-connect-in-amazon-web-services
 
+locals {
+  github_oidc_provider_url = "https://token.actions.githubusercontent.com"
+}
+
+data "aws_iam_openid_connect_provider" "github_oidc" {
+  count = var.github_lookup_oidc_provider && var.github_oidc_rolename != null ? 1 : 0
+  url = local.github_oidc_provider_url
+}
+
 # Use in conjunction with a role, and
 # https://github.com/aws-actions/configure-aws-credentials
 resource "aws_iam_openid_connect_provider" "github_oidc" {
-  count = var.github_oidc_rolename == null ? 0 : 1
-
+  count = !var.github_lookup_oidc_provider && var.github_oidc_rolename != null ? 1 : 0
   client_id_list = [
     "sts.amazonaws.com",
   ]
@@ -15,9 +23,9 @@ resource "aws_iam_openid_connect_provider" "github_oidc" {
     "Name" = "github-oidc"
   }
   thumbprint_list = [
-    "6938fd4d98bab03faadb97b34396831e3780aea1"
+    "6938fd4d98bab03faadb97b34396831e3780aea1" # pragma: allowlist secret
   ]
-  url = "https://token.actions.githubusercontent.com"
+  url = local.github_oidc_provider_url
 }
 
 resource "aws_iam_policy" "eks_access" {
@@ -47,7 +55,7 @@ resource "aws_iam_role" "github_oidc" {
         Action = "sts:AssumeRoleWithWebIdentity"
         Effect = "Allow"
         Principal = {
-          Federated = aws_iam_openid_connect_provider.github_oidc[0].arn
+          Federated = var.github_lookup_oidc_provider ? data.aws_iam_openid_connect_provider.github_oidc[0].arn : aws_iam_openid_connect_provider.github_oidc[0].arn
         }
         Condition = {
           StringLike = {

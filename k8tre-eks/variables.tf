@@ -144,3 +144,9 @@ variable "github_oidc_role_sub" {
   # default     = ["repo:k8tre/k8tre:ref:refs/heads/main"]
   default = []
 }
+
+variable "github_lookup_oidc_provider" {
+  type = bool
+  description = "Whether to lookup an existing github OIDC provider"
+  default = false
+}

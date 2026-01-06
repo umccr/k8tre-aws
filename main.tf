@@ -125,11 +125,6 @@ data "aws_subnets" "private_subnets" {
   }
 }
 
-data "aws_subnet" "private_subnet_set" {
-  for_each = toset(data.aws_subnets.private_subnets.ids)
-  id       = each.value
-}
-
 # Get IP of caller to optionally limit inbound connections
 data "http" "myip" {
   url = "https://checkip.amazonaws.com/"
@@ -139,7 +134,6 @@ locals {
   allow_ips = [
     "${chomp(data.http.myip.response_body)}/32",
   ]
-  private_subnet_cidr_blocks = [for s in data.aws_subnet.private_subnet_set : s.cidr_block]
 }
 
 # Security group that allows clusters to access each other
@@ -178,7 +172,7 @@ module "k8tre-eks" {
 
   cluster_name    = "k8tre-dev"
   vpc_id          = data.aws_vpc.vpc.id
-  private_subnets = slice(local.private_subnet_cidr_blocks, 0, 2)
+  private_subnets = slice(data.aws_subnets.private_subnets.ids, 0, 2)
 
   # k8s_version =
 
@@ -209,6 +203,7 @@ module "k8tre-eks" {
   # autoupdate_addons = false
 
   github_oidc_rolename = "k8tre-dev-github-oidc"
+  github_lookup_oidc_provider = true
 }
 
 

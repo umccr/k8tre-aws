@@ -22,6 +22,7 @@ variable "k8tre_cluster_labels" {
     secret-store = "kubernetes"
     vendor       = "aws"
     skip-metallb = "true"
+    external-domain = "umccr.org"
   }
   description = "Argocd labels applied to K8TRE cluster"
 }
@@ -34,7 +35,7 @@ variable "install_k8tre" {
 
 variable "k8tre_github_repo" {
   type        = string
-  default     = "k8tre/k8tre"
+  default     = "umccr/k8tre"
   description = "K8TRE GitHub organisation and repository to install"
 }
 

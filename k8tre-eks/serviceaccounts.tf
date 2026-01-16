@@ -57,3 +57,23 @@ module "cluster_autoscaler_pod_identity" {
     }
   }
 }
+
+module "external_dns_pod_identity" {
+  source = "terraform-aws-modules/eks-pod-identity/aws"
+  version                          = "2.0.0"
+  name = "external-dns"
+
+  attach_external_dns_policy    = true
+  external_dns_hosted_zone_arns = ["arn:aws:route53:::hostedzone/Z13ZMZH3CGX773"]
+
+  association_defaults = {
+    namespace       = "external-dns"
+    service_account = "external-dns-sa"
+  }
+
+  associations = {
+    cluster1 = {
+      cluster_name = var.cluster_name
+    }
+  }
+}

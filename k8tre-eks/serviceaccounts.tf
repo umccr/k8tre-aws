@@ -77,3 +77,23 @@ module "external_dns_pod_identity" {
     }
   }
 }
+
+module "cert_manager_pod_identity" {
+  source = "terraform-aws-modules/eks-pod-identity/aws"
+
+  name = "cert-manager"
+
+  attach_cert_manager_policy    = true
+  cert_manager_hosted_zone_arns = ["arn:aws:route53:::hostedzone/Z13ZMZH3CGX773"]
+
+  association_defaults = {
+    namespace       = "cert-manager"
+    service_account = "cert-manage-sa"
+  }
+
+  associations = {
+    cluster1 = {
+      cluster_name = var.cluster_name
+    }
+  }
+}

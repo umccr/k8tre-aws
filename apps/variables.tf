@@ -45,6 +45,12 @@ variable "k8tre_github_ref" {
   description = "K8TRE git ref (commit/branch/tag)"
 }
 
+variable "argo_cd_load_balancer" {
+  type = bool
+  default = true
+  description = "Whether to set the type to `LoadBalancer` for the argocd service enabling external access"
+}
+
 # Cluster where K8TRE wil be deployed
 data "aws_eks_cluster" "deployment" {
   name = data.terraform_remote_state.k8tre.outputs.k8tre_cluster_name

@@ -7,7 +7,7 @@ resource "helm_release" "argocd" {
   version    = "9.0.5"
   namespace  = "argocd"
 
-  set = [
+  set = flatten([
     {
       name  = "global.logging.level"
       value = "debug"
@@ -21,7 +21,11 @@ resource "helm_release" "argocd" {
       name  = "configs.cm.kustomize\\.buildOptions"
       value = "--enable-helm --load-restrictor LoadRestrictionsNone"
     },
-  ]
+    var.argo_cd_load_balancer ? [{
+      name  = "server.service.type"
+      value = "LoadBalancer"
+    }] : []
+  ])
 
   depends_on = [kubernetes_namespace.argocd]
 

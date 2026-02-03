@@ -105,3 +105,11 @@ terraform fmt -recursive
 tflint --recursive
 npx prettier@3.6.2 --write '**/*.{yaml,yml,md}'
 ```
+
+## Login to ArgoCD
+
+Expose load balancer for argocd portal:
+
+```sh
+kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "LoadBalancer"}}' --context k8tre-dev-argocd
+```

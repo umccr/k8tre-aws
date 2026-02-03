@@ -203,7 +203,6 @@ module "k8tre-eks" {
   # autoupdate_addons = false
 
   github_oidc_rolename = "k8tre-dev-github-oidc"
-  github_lookup_oidc_provider = true
 }
 
 

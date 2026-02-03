@@ -64,7 +64,7 @@ module "external_dns_pod_identity" {
   name = "external-dns"
 
   attach_external_dns_policy    = true
-  external_dns_hosted_zone_arns = ["arn:aws:route53:::hostedzone/Z13ZMZH3CGX773"]
+  external_dns_hosted_zone_arns = ["arn:aws:route53:::hostedzone/Z0764844247C3P03DJQKT"]
 
   association_defaults = {
     namespace       = "external-dns"
@@ -84,7 +84,7 @@ module "cert_manager_pod_identity" {
   name = "cert-manager"
 
   attach_cert_manager_policy    = true
-  cert_manager_hosted_zone_arns = ["arn:aws:route53:::hostedzone/Z13ZMZH3CGX773"]
+  cert_manager_hosted_zone_arns = ["arn:aws:route53:::hostedzone/Z0764844247C3P03DJQKT"]
 
   association_defaults = {
     namespace       = "cert-manager"

@@ -108,8 +108,17 @@ npx prettier@3.6.2 --write '**/*.{yaml,yml,md}'
 
 ## Login to ArgoCD
 
-Expose load balancer for argocd portal:
+Ensure that the `argo_cd_load_balancer` variable is set to true inside the apps variables: [variables.tf](apps/variables.tf).
+
+Get the password stored in a secret and the external hostname of the argocd server:
 
 ```sh
-kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "LoadBalancer"}}' --context k8tre-dev-argocd
+export PASSWORD=$(aws secretsmanager get-secret-value --secret-id k8tre-argocd-secret | jq -r .SecretString)
+export HOSTNAME=$(kubectl get svc -n argocd argocd-server --output jsonpath="{.status.loadBalancer.ingress[*].hostname}")
+```
+
+Login using CLI, or go to `$HOSTNAME` in the browser to access the UI portal:
+
+```sh
+argocd login $HOSTNAME --password $PASSWORD --username admin
 ```

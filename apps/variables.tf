@@ -27,7 +27,7 @@ variable "k8tre_cluster_labels" {
   description = "Argocd labels applied to K8TRE cluster"
 }
 
-variable "install_k8tre" {
+variable "install_crds" {
   type        = bool
   default     = true
   description = "Install K8TRE root app-of-apps"
@@ -45,7 +45,7 @@ variable "k8tre_github_ref" {
   description = "K8TRE git ref (commit/branch/tag)"
 }
 
-variable "argo_cd_load_balancer" {
+variable "argocd_load_balancer" {
   type = bool
   default = true
   description = "Whether to set the type to `LoadBalancer` for the argocd service enabling external access"

@@ -18,10 +18,10 @@ data "terraform_remote_state" "k8tre" {
 variable "k8tre_cluster_labels" {
   type = map(string)
   default = {
-    environment  = "dev"
-    secret-store = "kubernetes"
-    vendor       = "aws"
-    skip-metallb = "true"
+    environment     = "dev"
+    secret-store    = "kubernetes"
+    vendor          = "aws"
+    skip-metallb    = "true"
     external-domain = "umccr.org"
   }
   description = "Argocd labels applied to K8TRE cluster"
@@ -46,8 +46,8 @@ variable "k8tre_github_ref" {
 }
 
 variable "argocd_load_balancer" {
-  type = bool
-  default = true
+  type        = bool
+  default     = true
   description = "Whether to set the type to `LoadBalancer` for the argocd service enabling external access"
 }
 

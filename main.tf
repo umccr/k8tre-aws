@@ -69,9 +69,9 @@ provider "aws" {
   region = var.region
   default_tags {
     tags = {
-      "umccr-org:Creator": "terraform"
-      "umccr-org:Product": "k8tre"
-      "umccr-org:Source": "https://github.com/umccr/k8tre-aws"
+      "umccr-org:Creator" : "terraform"
+      "umccr-org:Product" : "k8tre"
+      "umccr-org:Source" : "https://github.com/umccr/k8tre-aws"
     }
   }
 }

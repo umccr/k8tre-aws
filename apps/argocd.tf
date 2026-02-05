@@ -1,6 +1,6 @@
 
 resource "aws_secretsmanager_secret" "argocd_password" {
-  name = "k8tre-argocd-password-secret"
+  name                    = "k8tre-argocd-password-secret"
   recovery_window_in_days = 0
 }
 
@@ -68,7 +68,7 @@ resource "helm_release" "argocd" {
       value = "--enable-helm --load-restrictor LoadRestrictionsNone"
     },
     {
-      name = "configs.secret.argocdServerAdminPassword"
+      name  = "configs.secret.argocdServerAdminPassword"
       value = bcrypt(aws_secretsmanager_secret_version.argocd_password.secret_string)
     },
     var.argocd_load_balancer ? [{
@@ -91,14 +91,14 @@ resource "helm_release" "argocd" {
         ]
         extraContainers = [
           {
-            name = "cmp-kustomize-envsubst"
+            name    = "cmp-kustomize-envsubst"
             command = ["/var/run/argocd/argocd-cmp-server"]
-            image = "quay.io/argoproj/argocd:v3.1.9"
+            image   = "quay.io/argoproj/argocd:{{ .Chart.AppVersion }}"
             securityContext = {
-              runAsNonRoot = true
-              runAsUser = 999
+              runAsNonRoot             = true
+              runAsUser                = 999
               allowPrivilegeEscalation = false
-              readOnlyRootFilesystem = true
+              readOnlyRootFilesystem   = true
               capabilities = {
                 drop = ["ALL"]
               }
@@ -109,20 +109,20 @@ resource "helm_release" "argocd" {
             volumeMounts = [
               {
                 mountPath = "/var/run/argocd"
-                name = "var-files"
+                name      = "var-files"
               },
               {
                 mountPath = "/home/argocd/cmp-server/plugins"
-                name = "plugins"
+                name      = "plugins"
               },
               {
                 mountPath = "/tmp"
-                name = "tmp"
+                name      = "tmp"
               },
               {
                 mountPath = "/home/argocd/cmp-server/config/plugin.yaml"
-                subPath = "plugin.yaml"
-                name = "cmp-plugin"
+                subPath   = "plugin.yaml"
+                name      = "cmp-plugin"
               }
             ]
           }
@@ -132,7 +132,7 @@ resource "helm_release" "argocd" {
   ]
 
   depends_on = [kubernetes_namespace.argocd, aws_secretsmanager_secret_version.argocd_password, kubernetes_config_map.cmp_plugin]
-  provider = helm.k8tre-dev-argocd
+  provider   = helm.k8tre-dev-argocd
 }
 
 resource "kubernetes_namespace" "argocd" {

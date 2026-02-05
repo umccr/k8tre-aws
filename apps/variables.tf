@@ -27,7 +27,7 @@ variable "k8tre_cluster_labels" {
   description = "Argocd labels applied to K8TRE cluster"
 }
 
-variable "install_crds" {
+variable "install_k8tre" {
   type        = bool
   default     = true
   description = "Install K8TRE root app-of-apps"

@@ -1,6 +1,7 @@
 
 resource "aws_secretsmanager_secret" "argocd_password" {
-  name = "k8tre-argocd-secret"
+  name = "k8tre-argocd-password-secret"
+  recovery_window_in_days = 0
 }
 
 data "aws_secretsmanager_random_password" "argocd_password" {
@@ -15,6 +16,34 @@ resource "aws_secretsmanager_secret_version" "argocd_password" {
 output "k8tre-argocd-secret" {
   value = aws_secretsmanager_secret.argocd_password.id
 }
+
+# Create the plugin config map first so that it can be referenced later.
+resource "kubernetes_config_map" "cmp_plugin" {
+  metadata {
+    name      = "cmp-plugin"
+    namespace = "argocd"
+  }
+
+  data = {
+    "plugin.yaml" = <<-EOT
+      apiVersion: argoproj.io/v1alpha1
+      kind: ConfigManagementPlugin
+      metadata:
+        name: kustomize-with-envsubst
+      spec:
+        version: v1.0
+        generate:
+          command: [sh, -c]
+          args:
+            - |
+              kustomize build --enable-helm --load-restrictor LoadRestrictionsNone . | \
+              sed "s|\$${ENVIRONMENT}|\$${ARGOCD_ENV_ENVIRONMENT}|g; s|\$${DOMAIN}|\$${ARGOCD_ENV_DOMAIN}|g; s|\$${METALLB_IP_RANGE}|\$${ARGOCD_ENV_METALLB_IP_RANGE}|g; s|\.ENVIRONMENT\.|.\$${ARGOCD_ENV_ENVIRONMENT}.|g; s|\.DOMAIN|.\$${ARGOCD_ENV_DOMAIN}|g; s|^ENVIRONMENT$$|\$${ARGOCD_ENV_ENVIRONMENT}|g; s|^DOMAIN$$|\$${ARGOCD_ENV_DOMAIN}|g"
+    EOT
+  }
+
+  provider = kubernetes.k8tre-dev-argocd
+}
+
 
 # https://github.com/argoproj/argo-helm/tree/argo-cd-9.0.5/charts/argo-cd
 resource "helm_release" "argocd" {
@@ -42,94 +71,67 @@ resource "helm_release" "argocd" {
       name = "configs.secret.argocdServerAdminPassword"
       value = bcrypt(aws_secretsmanager_secret_version.argocd_password.secret_string)
     },
-    {
-      name  = "repoServer.volumes[0].name"
-      value = "cmp-plugin"
-    },
-    {
-      name  = "repoServer.volumes[0].configMap.name"
-      value = "cmp-plugin"
-    },
-    {
-      name  = "repoServer.extraContainers[0].name"
-      value = "cmp-kustomize-envsubst"
-    },
-    {
-      name  = "repoServer.extraContainers[0].command[0]"
-      value = "/var/run/argocd/argocd-cmp-server"
-    },
-    {
-      name  = "repoServer.extraContainers[0].image"
-      value = "quay.io/argoproj/argocd:v3.1.9"
-    },
-    {
-      name  = "repoServer.extraContainers[0].securityContext.runAsNonRoot"
-      value = "true"
-    },
-    {
-      name  = "repoServer.extraContainers[0].securityContext.runAsUser"
-      value = "999"
-    },
-    {
-      name  = "repoServer.extraContainers[0].securityContext.allowPrivilegeEscalation"
-      value = "false"
-    },
-    {
-      name  = "repoServer.extraContainers[0].securityContext.readOnlyRootFilesystem"
-      value = "true"
-    },
-    {
-      name  = "repoServer.extraContainers[0].securityContext.capabilities.drop[0]"
-      value = "ALL"
-    },
-    {
-      name  = "repoServer.extraContainers[0].securityContext.seccompProfile.type"
-      value = "RuntimeDefault"
-    },
-    {
-      name  = "repoServer.extraContainers[0].volumeMounts[0].mountPath"
-      value = "/var/run/argocd"
-    },
-    {
-      name  = "repoServer.extraContainers[0].volumeMounts[0].name"
-      value = "var-files"
-    },
-    {
-      name  = "repoServer.extraContainers[0].volumeMounts[1].mountPath"
-      value = "/home/argocd/cmp-server/plugins"
-    },
-    {
-      name  = "repoServer.extraContainers[0].volumeMounts[1].name"
-      value = "plugins"
-    },
-    {
-      name  = "repoServer.extraContainers[0].volumeMounts[2].mountPath"
-      value = "/tmp"
-    },
-    {
-      name  = "repoServer.extraContainers[0].volumeMounts[2].name"
-      value = "tmp"
-    },
-    {
-      name  = "repoServer.extraContainers[0].volumeMounts[3].mountPath"
-      value = "/home/argocd/cmp-server/config/plugin.yaml"
-    },
-    {
-      name  = "repoServer.extraContainers[0].volumeMounts[3].subPath"
-      value = "plugin.yaml"
-    },
-    {
-      name  = "repoServer.extraContainers[0].volumeMounts[3].name"
-      value = "cmp-plugin"
-    },
     var.argocd_load_balancer ? [{
       name  = "server.service.type"
       value = "LoadBalancer"
     }] : [],
   ])
 
-  depends_on = [kubernetes_namespace.argocd, aws_secretsmanager_secret_version.argocd_password]
+  # Repo server config adding custom plugin.
+  values = [
+    yamlencode({
+      repoServer = {
+        volumes = [
+          {
+            name = "cmp-plugin"
+            configMap = {
+              name = "cmp-plugin"
+            }
+          }
+        ]
+        extraContainers = [
+          {
+            name = "cmp-kustomize-envsubst"
+            command = ["/var/run/argocd/argocd-cmp-server"]
+            image = "quay.io/argoproj/argocd:v3.1.9"
+            securityContext = {
+              runAsNonRoot = true
+              runAsUser = 999
+              allowPrivilegeEscalation = false
+              readOnlyRootFilesystem = true
+              capabilities = {
+                drop = ["ALL"]
+              }
+              seccompProfile = {
+                type = "RuntimeDefault"
+              }
+            }
+            volumeMounts = [
+              {
+                mountPath = "/var/run/argocd"
+                name = "var-files"
+              },
+              {
+                mountPath = "/home/argocd/cmp-server/plugins"
+                name = "plugins"
+              },
+              {
+                mountPath = "/tmp"
+                name = "tmp"
+              },
+              {
+                mountPath = "/home/argocd/cmp-server/config/plugin.yaml"
+                subPath = "plugin.yaml"
+                name = "cmp-plugin"
+              }
+            ]
+          }
+        ]
+      }
+    })
+  ]
 
+  depends_on = [kubernetes_namespace.argocd, aws_secretsmanager_secret_version.argocd_password, kubernetes_config_map.cmp_plugin]
   provider = helm.k8tre-dev-argocd
 }
 
@@ -171,7 +173,7 @@ resource "kubernetes_secret" "argocd-cluster-k8tre-dev" {
 
 # https://github.com/k8tre/k8tre/blob/75e550350427d38b637dffbe6f55124ed323ba70/app_of_apps/root-app-of-apps.yaml
 resource "kubernetes_manifest" "argocd_root_app_of_apps" {
-  count = var.install_crds ? 1 : 0
+  count = var.install_k8tre ? 1 : 0
 
   manifest = yamldecode(
     replace(
@@ -186,12 +188,5 @@ resource "kubernetes_manifest" "argocd_root_app_of_apps" {
   # This is a CRD, so ArgoCD must be deployed first
   depends_on = [helm_release.argocd]
 
-  provider = kubernetes.k8tre-dev-argocd
-}
-
-resource "kubernetes_manifest" "argocd_cmp_plugin" {
-  count = var.install_crds ? 1 : 0
-  manifest = yamldecode(file("cmp-plugin.yaml"))
-  depends_on = [helm_release.argocd]
   provider = kubernetes.k8tre-dev-argocd
 }

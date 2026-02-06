@@ -37,7 +37,7 @@ resource "kubernetes_config_map" "cmp_plugin" {
           args:
             - |
               kustomize build --enable-helm --load-restrictor LoadRestrictionsNone . | \
-              sed "s|\$${ENVIRONMENT}|\$${ARGOCD_ENV_ENVIRONMENT}|g; s|\$${DOMAIN}|\$${ARGOCD_ENV_DOMAIN}|g; s|\$${METALLB_IP_RANGE}|\$${ARGOCD_ENV_METALLB_IP_RANGE}|g; s|\.ENVIRONMENT\.|.\$${ARGOCD_ENV_ENVIRONMENT}.|g; s|\.DOMAIN|.\$${ARGOCD_ENV_DOMAIN}|g; s|^ENVIRONMENT$$|\$${ARGOCD_ENV_ENVIRONMENT}|g; s|^DOMAIN$$|\$${ARGOCD_ENV_DOMAIN}|g"
+              sed "s/\$${ENVIRONMENT}/$${ARGOCD_ENV_ENVIRONMENT}/g; s/\$${DOMAIN}/$${ARGOCD_ENV_DOMAIN}/g; s/\\.ENVIRONMENT\\./.$${ARGOCD_ENV_ENVIRONMENT}./g; s/\\.DOMAIN/.$${ARGOCD_ENV_DOMAIN}/g; s/^ENVIRONMENT$/$${ARGOCD_ENV_ENVIRONMENT}/g; s/^DOMAIN$/$${ARGOCD_ENV_DOMAIN}/g"
     EOT
   }
 

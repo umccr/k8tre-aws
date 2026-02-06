@@ -22,7 +22,7 @@ variable "k8tre_cluster_labels" {
     secret-store    = "kubernetes"
     vendor          = "aws"
     skip-metallb    = "true"
-    external-domain = "umccr.org"
+    external-domain = "guardians.umccr.org"
   }
   description = "Argocd labels applied to K8TRE cluster"
 }

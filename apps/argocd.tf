@@ -44,7 +44,6 @@ resource "kubernetes_config_map" "cmp_plugin" {
   provider = kubernetes.k8tre-dev-argocd
 }
 
-
 # https://github.com/argoproj/argo-helm/tree/argo-cd-9.0.5/charts/argo-cd
 resource "helm_release" "argocd" {
   name       = "argocd"

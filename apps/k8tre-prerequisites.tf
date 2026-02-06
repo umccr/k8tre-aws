@@ -47,3 +47,25 @@ resource "kubernetes_storage_class" "ebs-gp3" {
 
   provider = kubernetes.k8tre-dev
 }
+
+data "http" "gateway_api_crd" {
+  url = "https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.1.1/standard-install.yaml"
+}
+
+locals {
+  gateway_api_crd = provider::kubernetes::manifest_decode_multi(data.http.gateway_api_crd.response_body)
+  # Status key is not allowed in kubernetes_manifest:
+  # https://github.com/hashicorp/terraform-provider-kubernetes/issues/1428
+  gateway_api_crd_no_status = [
+    for manifest in local.gateway_api_crd : { for k, v in manifest : k => v if k != "status" }
+  ]
+}
+
+resource "kubernetes_manifest" "gateway_api_crd" {
+  for_each = {
+    for manifest in local.gateway_api_crd_no_status:
+      "${manifest.kind}--${manifest.metadata.name}" => manifest
+  }
+  manifest = each.value
+  provider = kubernetes.k8tre-dev
+}

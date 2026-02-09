@@ -189,7 +189,7 @@ module "k8tre-eks" {
   }
 
   # number_azs        = 1
-  # instance_type_wg1 = "t3a.2xlarge"
+  instance_type_wg1 = "t3a.small"
   # use_bottlerocket  = false
   root_volume_size = 200
   wg1_size         = 2
@@ -228,7 +228,7 @@ module "k8tre-argocd-eks" {
   additional_security_groups = [aws_security_group.internal_cluster_access.id]
 
   # number_azs        = 1
-  instance_type_wg1 = "t3a.xlarge"
+  instance_type_wg1 = "t3a.small"
   # use_bottlerocket  = false
   # root_volume_size = 100
   wg1_size     = 1

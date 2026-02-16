@@ -1,23 +1,4 @@
-
-resource "aws_secretsmanager_secret" "argocd_password" {
-  name                    = "k8tre-argocd-password-secret"
-  recovery_window_in_days = 0
-}
-
-data "aws_secretsmanager_random_password" "argocd_password" {
-  password_length = 20
-}
-
-resource "aws_secretsmanager_secret_version" "argocd_password" {
-  secret_id     = aws_secretsmanager_secret.argocd_password.id
-  secret_string = data.aws_secretsmanager_random_password.argocd_password.random_password
-}
-
-output "k8tre-argocd-secret" {
-  value = aws_secretsmanager_secret.argocd_password.id
-}
-
-# Create the plugin config map first so that it can be referenced later.
+# Create the plugin config map first so that it can be referenced later in the helm release.
 resource "kubernetes_config_map" "cmp_plugin" {
   metadata {
     name      = "cmp-plugin"
@@ -44,12 +25,30 @@ resource "kubernetes_config_map" "cmp_plugin" {
   provider = kubernetes.k8tre-dev-argocd
 }
 
+resource "aws_secretsmanager_secret" "argocd_password" {
+  name                    = "k8tre-argocd-password-secret"
+  recovery_window_in_days = 0
+}
+
+data "aws_secretsmanager_random_password" "argocd_password" {
+  password_length = 20
+}
+
+resource "aws_secretsmanager_secret_version" "argocd_password" {
+  secret_id     = aws_secretsmanager_secret.argocd_password.id
+  secret_string = data.aws_secretsmanager_random_password.argocd_password.random_password
+}
+
+output "k8tre-argocd-secret" {
+  value = aws_secretsmanager_secret.argocd_password.id
+}
+
 # https://github.com/argoproj/argo-helm/tree/argo-cd-9.0.5/charts/argo-cd
 resource "helm_release" "argocd" {
   name       = "argocd"
   repository = "https://argoproj.github.io/argo-helm"
   chart      = "argo-cd"
-  version    = "9.0.5"
+  version    = "9.4.0"
   namespace  = "argocd"
 
   set = flatten([
@@ -76,7 +75,7 @@ resource "helm_release" "argocd" {
     }] : [],
   ])
 
-  # Repo server config adding custom plugin.
+  # Specify the custom plugin extra containers and volumes.
   values = [
     yamlencode({
       repoServer = {

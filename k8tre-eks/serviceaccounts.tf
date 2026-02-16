@@ -120,6 +120,7 @@ module "cert_manager_pod_identity" {
   source = "terraform-aws-modules/eks-pod-identity/aws"
 
   name = "cert-manager"
+  use_name_prefix = false
 
   attach_cert_manager_policy    = true
   cert_manager_hosted_zone_arns = ["arn:aws:route53:::hostedzone/Z0764844247C3P03DJQKT"]

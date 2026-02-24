@@ -69,3 +69,21 @@ resource "kubernetes_manifest" "gateway_api_crd" {
   manifest = each.value
   provider = kubernetes.k8tre-dev
 }
+
+data "http" "loadbalancer_crd" {
+  url      = "https://github.com/kubernetes-sigs/aws-load-balancer-controller/blob/v3.0.0/helm/aws-load-balancer-controller/crds/crds.yaml"
+}
+
+resource "kubernetes_manifest" "loadbalancer_crd" {
+  manifest = data.http.loadbalancer_crd.response_body
+  provider = kubernetes.k8tre-dev
+}
+
+data "http" "loadbalancer_gateway_crd" {
+  url      = "https://github.com/kubernetes-sigs/aws-load-balancer-controller/blob/v3.0.0/helm/aws-load-balancer-controller/crds/gateway-crds.yaml"
+}
+
+resource "kubernetes_manifest" "loadbalancer_gateway_crd" {
+  manifest = data.http.loadbalancer_gateway_crd.response_body
+  provider = kubernetes.k8tre-dev
+}

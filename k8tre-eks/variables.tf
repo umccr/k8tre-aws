@@ -150,3 +150,9 @@ variable "github_lookup_oidc_provider" {
   description = "Whether to lookup an existing github OIDC provider"
   default = false
 }
+
+variable "create_pod_identities" {
+  type = bool
+  description = "Whether to create pod identities for the cluster service accounts"
+  default = true
+}

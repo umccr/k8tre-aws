@@ -203,6 +203,7 @@ module "k8tre-eks" {
   # autoupdate_addons = false
 
   github_oidc_rolename = "k8tre-dev-github-oidc"
+  create_pod_identities = true
 }
 
 
@@ -239,6 +240,7 @@ module "k8tre-argocd-eks" {
 
   argocd_create_role            = true
   argocd_assume_eks_access_role = module.k8tre-eks.eks_access_role
+  create_pod_identities = false
 }
 
 

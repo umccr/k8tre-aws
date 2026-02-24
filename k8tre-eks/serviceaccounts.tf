@@ -20,6 +20,7 @@ module "eks_pod_identity_load_balancer" {
       cluster_name = var.cluster_name
     }
   }
+  depends_on = [module.eks]
 }
 
 module "aws_ebs_csi_pod_identity" {
@@ -56,6 +57,7 @@ module "cluster_autoscaler_pod_identity" {
       cluster_name = var.cluster_name
     }
   }
+  depends_on = [module.eks]
 }
 
 ######################################################################
@@ -71,6 +73,8 @@ data "aws_iam_policy_document" "ack_ec2" {
 }
 
 module "ack_ec2_pod_identity" {
+  count = var.create_pod_identities ? 1 : 0
+
   source  = "terraform-aws-modules/eks-pod-identity/aws"
   version = "2.0.0"
   name    = "ack-ec2-controller"
@@ -87,6 +91,7 @@ module "ack_ec2_pod_identity" {
       cluster_name = var.cluster_name
     }
   }
+  depends_on = [module.eks]
 
   attach_custom_policy = true
   # TODO: narrow scope to only the EC2 actions we need
@@ -97,6 +102,8 @@ module "ack_ec2_pod_identity" {
 }
 
 module "external_dns_pod_identity" {
+  count = var.create_pod_identities ? 1 : 0
+
   source = "terraform-aws-modules/eks-pod-identity/aws"
   version                          = "2.0.0"
   name = "external-dns"
@@ -114,9 +121,12 @@ module "external_dns_pod_identity" {
       cluster_name = var.cluster_name
     }
   }
+  depends_on = [module.eks]
 }
 
 module "cert_manager_pod_identity" {
+  count = var.create_pod_identities ? 1 : 0
+
   source = "terraform-aws-modules/eks-pod-identity/aws"
 
   name = "cert-manager"
@@ -135,4 +145,5 @@ module "cert_manager_pod_identity" {
       cluster_name = var.cluster_name
     }
   }
+  depends_on = [module.eks]
 }

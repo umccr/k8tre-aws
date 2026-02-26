@@ -24,6 +24,22 @@ resource "helm_release" "cilium" {
       name  = "routingMode"
       value = "native"
     },
+    {
+      name  = "kubeProxyReplacement"
+      value = "true"
+    },
+    {
+      name  = "gatewayAPI.enabled"
+      value = "true"
+    },
+    {
+      name  = "hubble.ui.enabled"
+      value = "true"
+    },
+    {
+      name  = "hubble.relay.enabled"
+      value = "true"
+    }
   ]
 
   provider = helm.k8tre-dev
@@ -70,20 +86,20 @@ resource "kubernetes_manifest" "gateway_api_crd" {
   provider = kubernetes.k8tre-dev
 }
 
-data "http" "loadbalancer_crd" {
-  url      = "https://github.com/kubernetes-sigs/aws-load-balancer-controller/blob/v3.0.0/helm/aws-load-balancer-controller/crds/crds.yaml"
-}
-
-resource "kubernetes_manifest" "loadbalancer_crd" {
-  manifest = data.http.loadbalancer_crd.response_body
-  provider = kubernetes.k8tre-dev
-}
-
-data "http" "loadbalancer_gateway_crd" {
-  url      = "https://github.com/kubernetes-sigs/aws-load-balancer-controller/blob/v3.0.0/helm/aws-load-balancer-controller/crds/gateway-crds.yaml"
-}
-
-resource "kubernetes_manifest" "loadbalancer_gateway_crd" {
-  manifest = data.http.loadbalancer_gateway_crd.response_body
-  provider = kubernetes.k8tre-dev
-}
+# data "http" "loadbalancer_crd" {
+#   url      = "https://github.com/kubernetes-sigs/aws-load-balancer-controller/blob/v3.0.0/helm/aws-load-balancer-controller/crds/crds.yaml"
+# }
+#
+# resource "kubernetes_manifest" "loadbalancer_crd" {
+#   manifest = provider::kubernetes::manifest_decode_multi(data.http.loadbalancer_crd.response_body)
+#   provider = kubernetes.k8tre-dev
+# }
+#
+# data "http" "loadbalancer_gateway_crd" {
+#   url      = "https://github.com/kubernetes-sigs/aws-load-balancer-controller/blob/v3.0.0/helm/aws-load-balancer-controller/crds/gateway-crds.yaml"
+# }
+#
+# resource "kubernetes_manifest" "loadbalancer_gateway_crd" {
+#   manifest = provider::kubernetes::manifest_decode_multi(data.http.loadbalancer_gateway_crd.response_body)
+#   provider = kubernetes.k8tre-dev
+# }

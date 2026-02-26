@@ -147,3 +147,24 @@ module "cert_manager_pod_identity" {
   }
   depends_on = [module.eks]
 }
+
+module "aws_lb_controller_pod_identity" {
+  count = var.create_pod_identities ? 1 : 0
+
+  source = "terraform-aws-modules/eks-pod-identity/aws"
+
+  name = "aws-lbc"
+  attach_aws_lb_controller_policy = true
+
+  association_defaults = {
+    namespace       = "kube-system"
+    service_account = "aws-load-balancer-controller-sa"
+  }
+
+  associations = {
+    cluster1 = {
+      cluster_name = var.cluster_name
+    }
+  }
+  depends_on = [module.eks]
+}

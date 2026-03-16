@@ -156,3 +156,10 @@ variable "create_pod_identities" {
   description = "Whether to create pod identities for the cluster service accounts"
   default = true
 }
+
+variable "scale_to_zero_recurrence" {
+  type = string
+  description = "The recurrence to run a scale to 0 cron job on the autoscaling group. Set to null to not create an autoscaling schedule."
+  # Run every day as midnight.
+  default = "0 0 * * *"
+}

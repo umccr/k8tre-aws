@@ -51,6 +51,10 @@ terraform {
       source  = "hashicorp/http"
       version = "~> 3.5"
     }
+    aap = {
+      source  = "ansible/aap"
+      version = "1.3.0"
+    }
   }
 
   required_version = ">= 1.10.0"
@@ -242,7 +246,6 @@ module "k8tre-argocd-eks" {
   argocd_assume_eks_access_role = module.k8tre-eks.eks_access_role
   create_pod_identities = false
 }
-
 
 output "kubeconfig_command_k8tre-dev" {
   description = "Create kubeconfig for k8tre-dev"

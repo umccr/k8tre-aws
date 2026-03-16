@@ -108,7 +108,7 @@ module "eks" {
       ], var.additional_security_groups)
 
       desired_size = var.wg1_size
-      min_size     = 1
+      min_size     = 0
       max_size     = var.wg1_max_size
 
       # Disk space can't be set with the default custom launch template

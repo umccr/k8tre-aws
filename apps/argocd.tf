@@ -26,7 +26,7 @@ resource "kubernetes_config_map" "cmp_plugin" {
 }
 
 resource "aws_secretsmanager_secret" "argocd_password" {
-  name                    = "k8tre-argocd-password-secret"
+  name                    = "k8tre-argocd"
   recovery_window_in_days = 0
 }
 

@@ -64,42 +64,36 @@ resource "kubernetes_storage_class" "ebs-gp3" {
   provider = kubernetes.k8tre-dev
 }
 
-data "http" "gateway_api_crd" {
-  url = "https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.1.1/standard-install.yaml"
+locals {
+  crds = {
+    gateway = "https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.1.1/standard-install.yaml"
+    loadbalancer = "https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/refs/tags/v3.0.0/helm/aws-load-balancer-controller/crds/crds.yaml"
+    loadbalancer_gateway = "https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/refs/tags/v3.0.0/helm/aws-load-balancer-controller/crds/gateway-crds.yaml"
+  }
+}
+
+data "http" "crds" {
+  for_each = local.crds
+  url      = each.value
 }
 
 locals {
-  gateway_api_crd = provider::kubernetes::manifest_decode_multi(data.http.gateway_api_crd.response_body)
-  # Status key is not allowed in kubernetes_manifest:
-  # https://github.com/hashicorp/terraform-provider-kubernetes/issues/1428
-  gateway_api_crd_no_status = [
-    for manifest in local.gateway_api_crd : { for k, v in manifest : k => v if k != "status" }
-  ]
+  decoded_manifests = {
+    for manifest_type, http_data in data.http.crds :
+      manifest_type => provider::kubernetes::manifest_decode_multi(http_data.response_body)
+  }
+  manifests_no_status = merge([
+    for manifest_type, manifests in local.decoded_manifests : {
+      for manifest in manifests :
+        "${manifest_type}--${manifest.kind}--${manifest.metadata.name}" => {
+          for k, v in manifest : k => v if k != "status"
+        }
+    }
+  ]...)
 }
 
-resource "kubernetes_manifest" "gateway_api_crd" {
-  for_each = {
-    for manifest in local.gateway_api_crd_no_status:
-      "${manifest.kind}--${manifest.metadata.name}" => manifest
-  }
+resource "kubernetes_manifest" "crds" {
+  for_each = local.manifests_no_status
   manifest = each.value
   provider = kubernetes.k8tre-dev
 }
-
-# data "http" "loadbalancer_crd" {
-#   url      = "https://github.com/kubernetes-sigs/aws-load-balancer-controller/blob/v3.0.0/helm/aws-load-balancer-controller/crds/crds.yaml"
-# }
-#
-# resource "kubernetes_manifest" "loadbalancer_crd" {
-#   manifest = provider::kubernetes::manifest_decode_multi(data.http.loadbalancer_crd.response_body)
-#   provider = kubernetes.k8tre-dev
-# }
-#
-# data "http" "loadbalancer_gateway_crd" {
-#   url      = "https://github.com/kubernetes-sigs/aws-load-balancer-controller/blob/v3.0.0/helm/aws-load-balancer-controller/crds/gateway-crds.yaml"
-# }
-#
-# resource "kubernetes_manifest" "loadbalancer_gateway_crd" {
-#   manifest = provider::kubernetes::manifest_decode_multi(data.http.loadbalancer_gateway_crd.response_body)
-#   provider = kubernetes.k8tre-dev
-# }

@@ -7,7 +7,7 @@ data "aws_caller_identity" "current" {}
 
 locals {
   aws_account_id = data.aws_caller_identity.current.account_id
-  admin_principals = {
+  admin_principals = merge({
     # Anyone in the AWS account with sufficient permissions can access the cluster
     aws_admins = "arn:aws:iam::${local.aws_account_id}:root"
     # Optional GitHub OIDC role
@@ -15,7 +15,9 @@ locals {
     # ARN can't be resolved until after the role is created
     # eks_access = aws_iam_role.eks_access.arn
     eks_access = "arn:aws:iam::${local.aws_account_id}:role/${var.cluster_name}-eks-access"
-  }
+    },
+    var.additional_admin_principals
+  )
 }
 
 # This assumes the EKS service linked role is already created (or the current user has permissions to create it)

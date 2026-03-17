@@ -39,6 +39,12 @@ variable "allowed_cidrs" {
   default     = ["myip"]
 }
 
+variable "additional_admin_principals" {
+  type        = map(string)
+  description = "Additional EKS admin principals"
+  default     = {}
+}
+
 
 terraform {
   required_providers {
@@ -195,6 +201,8 @@ module "k8tre-eks" {
   )
 
   github_oidc_rolename = "k8tre-dev-github-oidc"
+
+  additional_admin_principals = var.additional_admin_principals
 }
 
 
@@ -232,6 +240,8 @@ module "k8tre-argocd-eks" {
 
   argocd_create_role            = true
   argocd_assume_eks_access_role = module.k8tre-eks.eks_access_role
+
+  additional_admin_principals = var.additional_admin_principals
 }
 
 

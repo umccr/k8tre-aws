@@ -156,3 +156,9 @@ variable "github_oidc_role_sub" {
   # default     = ["repo:k8tre/k8tre:ref:refs/heads/main"]
   default = []
 }
+
+variable "additional_admin_principals" {
+  type        = map(string)
+  description = "Additional EKS admin pricipals"
+  default     = {}
+}

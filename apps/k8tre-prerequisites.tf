@@ -4,9 +4,11 @@ resource "helm_release" "cilium" {
   name       = "cilium"
   repository = "https://helm.cilium.io/"
   chart      = "cilium"
-  version    = "1.19.0"
+  version    = "1.19.1"
   namespace  = "kube-system"
 
+  # Azure values for comparison
+  # https://github.com/karectl/kare-azure-infrastructure/blob/09f192fa4be77a10e1e93e82e32bb860ddea0a4c/modules/cluster-gateway/main.tf#L101
   set = [
     {
       name  = "cni.chainingMode"
@@ -21,8 +23,29 @@ resource "helm_release" "cilium" {
       value = "false"
     },
     {
+      name  = "gatewayAPI.enabled"
+      value = "true"
+    },
+    {
+      name  = "kubeProxyReplacement"
+      value = "true"
+    },
+    {
       name  = "routingMode"
       value = "native"
+    },
+
+    {
+      name  = "hubble.enabled"
+      value = "true"
+    },
+    {
+      name  = "hubble.ui.enabled"
+      value = "true"
+    },
+    {
+      name  = "hubble.relay.enabled"
+      value = "true"
     },
   ]
 

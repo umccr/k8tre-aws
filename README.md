@@ -122,3 +122,7 @@ Login using CLI, or go to `$HOSTNAME` in the browser to access the UI portal:
 ```sh
 argocd login $HOSTNAME --password $PASSWORD --username admin
 ```
+
+### Configuring K8TRE
+
+Set the required labels using `k8tre_cluster_label_overrides` in `apps/variables.tf`

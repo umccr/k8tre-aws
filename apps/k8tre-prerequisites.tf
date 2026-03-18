@@ -4,9 +4,11 @@ resource "helm_release" "cilium" {
   name       = "cilium"
   repository = "https://helm.cilium.io/"
   chart      = "cilium"
-  version    = "1.19.0"
+  version    = "1.19.1"
   namespace  = "kube-system"
 
+  # Azure values for comparison
+  # https://github.com/karectl/kare-azure-infrastructure/blob/09f192fa4be77a10e1e93e82e32bb860ddea0a4c/modules/cluster-gateway/main.tf#L101
   set = [
     {
       name  = "cni.chainingMode"
@@ -21,15 +23,20 @@ resource "helm_release" "cilium" {
       value = "false"
     },
     {
-      name  = "routingMode"
-      value = "native"
+      name  = "gatewayAPI.enabled"
+      value = "true"
     },
     {
       name  = "kubeProxyReplacement"
       value = "true"
     },
     {
-      name  = "gatewayAPI.enabled"
+      name  = "routingMode"
+      value = "native"
+    },
+
+    {
+      name  = "hubble.enabled"
       value = "true"
     },
     {
@@ -39,7 +46,7 @@ resource "helm_release" "cilium" {
     {
       name  = "hubble.relay.enabled"
       value = "true"
-    }
+    },
   ]
 
   provider = helm.k8tre-dev
@@ -64,6 +71,57 @@ resource "kubernetes_storage_class" "ebs-gp3" {
   provider = kubernetes.k8tre-dev
 }
 
+resource "kubernetes_storage_class" "rwo-default" {
+  metadata {
+    name = "rwo-default"
+    annotations = {
+      "description" = "ReadWriteOnce - Single pod read-write access"
+    }
+  }
+  storage_provisioner = "kubernetes.io/aws-ebs"
+  reclaim_policy      = "Delete"
+  parameters = {
+    type = "gp3"
+  }
+  volume_binding_mode    = "WaitForFirstConsumer"
+  allow_volume_expansion = true
+
+  provider = kubernetes.k8tre-dev
+}
+
+data "aws_efs_file_system" "lookup" {
+  creation_token = var.efs_name
+}
+
+# https://github.com/kubernetes-sigs/aws-efs-csi-driver/blob/ada97c0de28ddea1b525595ed419292191c8601d/examples/kubernetes/dynamic_provisioning/README.md
+resource "kubernetes_storage_class" "rwx-default" {
+  metadata {
+    name = "rwx-default"
+    annotations = {
+      "description" = "ReadWriteMany - Multi-pod shared read-write access"
+    }
+  }
+  storage_provisioner = "efs.csi.aws.com"
+  reclaim_policy      = "Delete"
+  parameters = {
+    provisioningMode = "efs-ap"
+    fileSystemId     = data.aws_efs_file_system.lookup.id
+    directoryPerms   = "750"
+
+    # The rest of these are optional
+    gidRangeStart         = "1000"
+    gidRangeEnd           = "2000"
+    basePath              = "/dynamic_provisioning"
+    subPathPattern        = "$${.PVC.namespace}/$${.PVC.name}"
+    ensureUniqueDirectory = "true"
+    reuseAccessPoint      = "false"
+  }
+  volume_binding_mode    = "WaitForFirstConsumer"
+  allow_volume_expansion = true
+
+  provider = kubernetes.k8tre-dev
+}
+
 locals {
   crds = {
     gateway = "https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.1.1/standard-install.yaml"
@@ -80,14 +138,14 @@ data "http" "crds" {
 locals {
   decoded_manifests = {
     for manifest_type, http_data in data.http.crds :
-      manifest_type => provider::kubernetes::manifest_decode_multi(http_data.response_body)
+    manifest_type => provider::kubernetes::manifest_decode_multi(http_data.response_body)
   }
   manifests_no_status = merge([
     for manifest_type, manifests in local.decoded_manifests : {
       for manifest in manifests :
-        "${manifest_type}--${manifest.kind}--${manifest.metadata.name}" => {
-          for k, v in manifest : k => v if k != "status"
-        }
+      "${manifest_type}--${manifest.kind}--${manifest.metadata.name}" => {
+        for k, v in manifest : k => v if k != "status"
+      }
     }
   ]...)
 }

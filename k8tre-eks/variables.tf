@@ -107,6 +107,18 @@ variable "additional_eks_addons" {
   description = "Map of additional EKS addons"
 }
 
+variable "create_pod_identities" {
+  type        = bool
+  default     = false
+  description = "Create additional EKS pod identities (EBS and EFS CSI and are always created)"
+}
+
+variable "hosted_zone_ids" {
+  type        = list(string)
+  default     = []
+  description = "Route53 hosted zone IDs for External DNS, set to empty to disable"
+}
+
 variable "argocd_create_role" {
   type        = bool
   description = "Whether to create an ArgoCD pod identity and roles"
@@ -149,12 +161,6 @@ variable "github_lookup_oidc_provider" {
   type = bool
   description = "Whether to lookup an existing github OIDC provider"
   default = false
-}
-
-variable "create_pod_identities" {
-  type = bool
-  description = "Whether to create pod identities for the cluster service accounts"
-  default = true
 }
 
 variable "scale_to_zero_recurrence" {

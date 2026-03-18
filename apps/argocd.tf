@@ -48,7 +48,7 @@ resource "helm_release" "argocd" {
   name       = "argocd"
   repository = "https://argoproj.github.io/argo-helm"
   chart      = "argo-cd"
-  version    = "9.4.0"
+  version    = "9.4.12"
   namespace  = "argocd"
 
   set = flatten([
@@ -149,7 +149,8 @@ resource "kubernetes_secret" "argocd-cluster-k8tre-dev" {
     namespace = "argocd"
     labels = merge(
       { "argocd.argoproj.io/secret-type" = "cluster" },
-      var.k8tre_cluster_labels
+      var.k8tre_cluster_labels,
+      var.k8tre_cluster_label_overrides,
     )
   }
   data = {
@@ -169,14 +170,19 @@ resource "kubernetes_secret" "argocd-cluster-k8tre-dev" {
   provider = kubernetes.k8tre-dev-argocd
 }
 
-# https://github.com/k8tre/k8tre/blob/75e550350427d38b637dffbe6f55124ed323ba70/app_of_apps/root-app-of-apps.yaml
+# https://github.com/k8tre/k8tre/blob/main/app_of_apps/root-app-of-apps.yaml
+data "http" "k8tre-root-app" {
+  count = var.install_k8tre ? 1 : 0
+  url   = "https://github.com/${var.k8tre_github_repo}/raw/refs/heads/${var.k8tre_github_ref}/app_of_apps/root-app-of-apps.yaml"
+}
+
 resource "kubernetes_manifest" "argocd_root_app_of_apps" {
   count = var.install_k8tre ? 1 : 0
 
   manifest = yamldecode(
     replace(
       replace(
-        file("root-app-of-apps.yaml"),
+        data.http.k8tre-root-app[0].response_body,
         "main", var.k8tre_github_ref
       ),
       "k8tre/k8tre", var.k8tre_github_repo

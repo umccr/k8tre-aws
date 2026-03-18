@@ -22,7 +22,6 @@ variable "public_subnets" {
   description = "Public subnet CIDRs to create"
   default = [
     "10.0.1.0/24", "10.0.2.0/24",
-    "10.0.9.0/24", "10.0.10.0/24",
   ]
 }
 
@@ -31,8 +30,13 @@ variable "private_subnets" {
   description = "Private subnet CIDRs to create"
   default = [
     "10.0.3.0/24", "10.0.4.0/24",
-    "10.0.11.0/24", "10.0.12.0/24",
   ]
+}
+
+variable "allowed_cidrs" {
+  type        = list(string)
+  description = "CIDRs allowed to access K8TRE ('myip' is dynamically replaced by your current IP)"
+  default     = ["myip"]
 }
 
 terraform {
@@ -80,6 +84,18 @@ provider "aws" {
   }
 }
 
+# Get IP of caller to optionally limit inbound connections
+data "http" "myip" {
+  url = "https://checkip.amazonaws.com/"
+}
+
+locals {
+  allow_ips = [
+    for ip in var.allowed_cidrs :
+    replace(ip, "/^myip$/", "${chomp(data.http.myip.response_body)}/32")
+  ]
+}
+
 
 ######################################################################
 # VPC
@@ -87,7 +103,7 @@ provider "aws" {
 
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
-  version = "6.4.0"
+  version = "6.6.0"
 
   name = var.vpc_name
   cidr = var.vpc_cidr
@@ -109,35 +125,6 @@ module "vpc" {
   }
 
   private_subnet_tags = {}
-}
-
-# data "aws_vpc" "vpc" {
-#   filter {
-#     name = "tag:Name"
-#     values = ["main-vpc"]
-#   }
-# }
-#
-# data "aws_subnets" "private_subnets" {
-#   filter {
-#     name   = "vpc-id"
-#     values = [data.aws_vpc.vpc.id]
-#   }
-#   filter {
-#     name   = "tag:Name"
-#     values = ["*-private-*"]
-#   }
-# }
-
-# Get IP of caller to optionally limit inbound connections
-data "http" "myip" {
-  url = "https://checkip.amazonaws.com/"
-}
-
-locals {
-  allow_ips = [
-    "${chomp(data.http.myip.response_body)}/32",
-  ]
 }
 
 # Security group that allows clusters to access each other
@@ -176,7 +163,7 @@ module "k8tre-eks" {
 
   cluster_name    = "k8tre-dev"
   vpc_id          = module.vpc.vpc_id
-  private_subnets = slice(module.vpc.private_subnets, 0, 2)
+  private_subnets = module.vpc.private_subnets
 
   # k8s_version =
 
@@ -206,8 +193,13 @@ module "k8tre-eks" {
   # autoupdate_ami = false
   # autoupdate_addons = false
 
-  github_oidc_rolename = "k8tre-dev-github-oidc"
   create_pod_identities = true
+  hosted_zone_ids = concat(
+    [module.dnsresolver.private-zone-id],
+    module.dnsresolver.public-zone-id
+  )
+
+  github_oidc_rolename = "k8tre-dev-github-oidc"
 }
 
 
@@ -221,7 +213,7 @@ module "k8tre-argocd-eks" {
 
   cluster_name    = "k8tre-dev-argocd"
   vpc_id          = module.vpc.vpc_id
-  private_subnets = slice(module.vpc.private_subnets, 2, 4)
+  private_subnets = module.vpc.private_subnets
 
   # k8s_version =
 
@@ -241,10 +233,10 @@ module "k8tre-argocd-eks" {
 
   # autoupdate_ami = false
   # autoupdate_addons = false
+  create_pod_identities = false
 
   argocd_create_role            = true
   argocd_assume_eks_access_role = module.k8tre-eks.eks_access_role
-  create_pod_identities = false
 }
 
 output "kubeconfig_command_k8tre-dev" {

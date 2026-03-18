@@ -19,12 +19,19 @@ variable "k8tre_cluster_labels" {
   type = map(string)
   default = {
     environment     = "dev"
-    secret-store    = "kubernetes"
+    secret-store    = "aws"
     vendor          = "aws"
     skip-metallb    = "true"
     external-domain = "guardians.umccr.org"
+    external-dns    = "aws"
   }
   description = "Argocd labels applied to K8TRE cluster"
+}
+
+variable "k8tre_cluster_label_overrides" {
+  type        = map(string)
+  default     = {}
+  description = "Additional labels merged with k8tre_cluster_labels and applied to K8TRE cluster"
 }
 
 variable "install_k8tre" {
@@ -49,6 +56,11 @@ variable "argocd_load_balancer" {
   type        = bool
   default     = true
   description = "Whether to set the type to `LoadBalancer` for the argocd service enabling external access"
+}
+
+variable "efs_name" {
+  type        = string
+  description = "EFS name creation token, must match module.efs var.name"
 }
 
 # Cluster where K8TRE wil be deployed

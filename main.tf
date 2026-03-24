@@ -26,9 +26,9 @@ variable "public_subnets" {
 
 variable "private_subnets" {
   type        = list(string)
-  description = "Private subnet CIDRs to create"
+  description = "Private subnet CIDRs to create. These IPs are used by EKS pods so make it large!"
   default = [
-    "10.0.3.0/24", "10.0.4.0/24",
+    "10.0.64.0/18", "10.0.128.0/18",
   ]
 }
 
@@ -46,13 +46,19 @@ variable "additional_admin_principals" {
 
 variable "efs_token" {
   type        = string
-  description = "EFS name creation token"
-  default     = "k8tre-efs"
+  description = "EFS name creation token, if null default to var.name"
+  default     = null
+}
+
+variable "enable_github_oidc" {
+  type        = bool
+  description = "Create GitHub OIDC role"
+  default     = false
 }
 
 variable "deployment_stage" {
   type        = number
-  default     = 3
+  default     = 1
   description = <<EOT
   Multi-stage deployment step.
   This is necessary because Terraform needs to resolve some resources before
@@ -147,7 +153,7 @@ module "vpc" {
 
 # Security group that allows clusters to access each other
 resource "aws_security_group" "internal_cluster_access" {
-  name_prefix = "internal_cluster_endpoint"
+  name_prefix = "internal-cluster-endpoint"
   vpc_id      = module.vpc.vpc_id
   description = "Internal cluster endpoint"
 
@@ -234,7 +240,7 @@ module "k8tre-eks" {
     module.dnsresolver.public-zone-id
   )
 
-  github_oidc_rolename = "${var.name}-github-oidc"
+  github_oidc_rolename = var.enable_github_oidc ? "${var.name}-github-oidc" : null
 
   additional_admin_principals = var.additional_admin_principals
 }
@@ -296,7 +302,7 @@ output "name" {
 
 output "efs_token" {
   description = "EFS name creation token"
-  value       = var.efs_token
+  value       = local.efs_token
 }
 
 output "service_access_prefix_list" {

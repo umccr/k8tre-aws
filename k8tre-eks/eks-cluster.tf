@@ -3,7 +3,8 @@
 # https://github.com/terraform-aws-modules/terraform-aws-eks/blame/v19.14.0/examples/complete/main.tf
 # https://github.com/terraform-aws-modules/terraform-aws-eks/blob/v19.14.0/docs/compute_resources.md
 
-# This is complicated because we want to disable the default AWS vpc-cni so we can # install Cilium, but the nodegroup will fail to become ready without a CNI.
+# This is complicated because we want to disable the default AWS vpc-cni so we can
+# install Cilium, but the nodegroup will fail to become ready without a CNI.
 # https://cilium.io/blog/2025/06/19/eks-eni-install/
 #
 # It should be possible to keep the AWS vpc-cni and chain the Cilium CNI
@@ -55,7 +56,6 @@ module "eks" {
     "arn:aws:iam::${local.aws_account_id}:root",
   ]
 
-  # TODO Is this needed?
   enable_irsa = false
 
   # Disable all addons since we don't yet have a nodegroup to run them on
@@ -93,6 +93,7 @@ module "eks" {
 }
 
 # K8S Gateway CRDs: Cilium Helm chart detects whether Gateway CRDs are present
+# so CRDs must be installed first
 
 data "http" "gateway_standard_crds" {
   url = "https://github.com/kubernetes-sigs/gateway-api/releases/download/v${var.gateway_api_version}/standard-install.yaml"
@@ -104,14 +105,18 @@ data "http" "gateway_standard_crds" {
 
 locals {
   gateway_crds = provider::kubernetes::manifest_decode_multi(data.http.gateway_standard_crds.response_body)
-  gateway_standard_crds_removed_status = (var.deployment_stage >= 1) ? [
+  gateway_standard_crds_removed_status = [
     for manifest in local.gateway_crds : { for k, v in manifest : k => v if k != "status" }
-  ] : []
+  ]
+
+  gateway_manifests = flatten([
+    var.deployment_stage >= 1 ? [local.gateway_standard_crds_removed_status] : []
+  ])
 }
 
 resource "kubernetes_manifest" "gateway_crds" {
   for_each = {
-    for manifest in local.gateway_standard_crds_removed_status :
+    for manifest in local.gateway_manifests :
     "${manifest.kind}--${manifest.metadata.name}" => manifest
   }
 

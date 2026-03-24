@@ -14,9 +14,13 @@ variable "create_public_zone" {
 ######################################################################
 # EFS
 
+locals {
+  efs_token = var.efs_token == null ? var.name : var.efs_token
+}
+
 module "efs" {
   source  = "./efs"
-  name    = var.efs_token
+  name    = local.efs_token
   vpc_id  = module.vpc.vpc_id
   subnets = module.vpc.private_subnets
 }

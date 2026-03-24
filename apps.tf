@@ -1,8 +1,83 @@
+# Setup K8TRE and prerequisites
+
+
+######################################################################
+# Standard storage classes required by K8TRE
+
+resource "kubernetes_storage_class" "rwo-default" {
+  count = (var.deployment_stage >= 2) ? 1 : 0
+
+  metadata {
+    name = "rwo-default"
+    annotations = {
+      "description" = "ReadWriteOnce - Single pod read-write access"
+      # "storageclass.kubernetes.io/is-default-class" = "true"
+    }
+  }
+  storage_provisioner = "kubernetes.io/aws-ebs"
+  reclaim_policy      = "Delete"
+  parameters = {
+    type = "gp3"
+  }
+  volume_binding_mode    = "WaitForFirstConsumer"
+  allow_volume_expansion = true
+
+  provider = kubernetes.k8tre-dev
+}
+
+# https://github.com/kubernetes-sigs/aws-efs-csi-driver/blob/ada97c0de28ddea1b525595ed419292191c8601d/examples/kubernetes/dynamic_provisioning/README.md
+resource "kubernetes_storage_class" "rwx-default" {
+  count = (var.deployment_stage >= 2) ? 1 : 0
+
+  metadata {
+    name = "rwx-default"
+    annotations = {
+      "description" = "ReadWriteMany - Multi-pod shared read-write access"
+      # "storageclass.kubernetes.io/is-default-class" = "true"
+    }
+  }
+  storage_provisioner = "efs.csi.aws.com"
+  reclaim_policy      = "Delete"
+  parameters = {
+    provisioningMode = "efs-ap"
+    fileSystemId     = module.efs.file_system_id
+    directoryPerms   = "750"
+
+    # The rest of these are optional
+    gidRangeStart         = "1000"
+    gidRangeEnd           = "2000"
+    basePath              = "/dynamic_provisioning"
+    subPathPattern        = "$${.PVC.namespace}/$${.PVC.name}"
+    ensureUniqueDirectory = "true"
+    reuseAccessPoint      = "false"
+  }
+  volume_binding_mode    = "WaitForFirstConsumer"
+  allow_volume_expansion = true
+
+  provider = kubernetes.k8tre-dev
+}
+
+
+######################################################################
+# ArgoCD
+
+resource "kubernetes_namespace" "argocd" {
+  count = (var.deployment_stage >= 2) ? 1 : 0
+
+  metadata {
+    name = "argocd"
+  }
+
+  provider = kubernetes.k8tre-dev-argocd
+}
+
 # Create the plugin config map first so that it can be referenced later in the helm release.
 resource "kubernetes_config_map" "cmp_plugin" {
+  count = (var.deployment_stage >= 2) ? 1 : 0
+
   metadata {
     name      = "cmp-plugin"
-    namespace = "argocd"
+    namespace = kubernetes_namespace.argocd[0].metadata[0].name
   }
 
   data = {
@@ -27,11 +102,13 @@ resource "kubernetes_config_map" "cmp_plugin" {
 
 # https://github.com/argoproj/argo-helm/tree/argo-cd-9.0.5/charts/argo-cd
 resource "helm_release" "argocd" {
+  count = (var.deployment_stage >= 2) ? 1 : 0
+
   name       = "argocd"
   repository = "https://argoproj.github.io/argo-helm"
   chart      = "argo-cd"
   version    = var.argocd_version
-  namespace  = "argocd"
+  namespace  = kubernetes_namespace.argocd[0].metadata[0].name
 
   set = [
     {
@@ -108,23 +185,19 @@ resource "helm_release" "argocd" {
   provider = helm.k8tre-dev-argocd
 }
 
-resource "kubernetes_namespace" "argocd" {
-  metadata {
-    name = "argocd"
-  }
-
-  provider = kubernetes.k8tre-dev-argocd
-}
 
 # Add k8tre-dev cluster to ArgoCD
 # https://argo-cd.readthedocs.io/en/release-3.1/operator-manual/declarative-setup/#eks
 resource "kubernetes_secret" "argocd-cluster-k8tre-dev" {
+  count = (var.deployment_stage >= 2) ? 1 : 0
+
   metadata {
     name      = "argocd-cluster-${data.aws_eks_cluster.deployment.id}"
-    namespace = "argocd"
+    namespace = kubernetes_namespace.argocd[0].metadata[0].name
     labels = merge(
       { "argocd.argoproj.io/secret-type" = "cluster" },
       var.k8tre_cluster_labels,
+      { "external-domain" : var.dns_domain },
       var.k8tre_cluster_label_overrides,
     )
   }
@@ -147,12 +220,13 @@ resource "kubernetes_secret" "argocd-cluster-k8tre-dev" {
 
 # https://github.com/k8tre/k8tre/blob/main/app_of_apps/root-app-of-apps.yaml
 data "http" "k8tre-root-app" {
-  count = var.install_k8tre ? 1 : 0
-  url   = "https://github.com/${var.k8tre_github_repo}/raw/refs/heads/${var.k8tre_github_ref}/app_of_apps/root-app-of-apps.yaml"
+  count = (var.deployment_stage >= 3) && var.install_k8tre ? 1 : 0
+
+  url = "https://github.com/${var.k8tre_github_repo}/raw/refs/heads/${var.k8tre_github_ref}/app_of_apps/root-app-of-apps.yaml"
 }
 
 resource "kubernetes_manifest" "argocd-root-app-of-apps" {
-  count = var.install_k8tre ? 1 : 0
+  count = (var.deployment_stage >= 3) && var.install_k8tre ? 1 : 0
 
   manifest = yamldecode(
     replace(

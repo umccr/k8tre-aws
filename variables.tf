@@ -13,12 +13,13 @@ data "terraform_remote_state" "k8tre" {
 variable "k8tre_cluster_labels" {
   type = map(string)
   default = {
-    environment     = "dev"
-    secret-store    = "aws"
-    vendor          = "aws"
-    skip-metallb    = "true"
-    external-domain = "k8tre-dev.internal"
-    external-dns    = "aws"
+    environment  = "dev"
+    secret-store = "aws"
+    vendor       = "aws"
+    skip-metallb = "true"
+    # Defaults to var.dns_domain
+    # external-domain
+    external-dns = "aws"
   }
   description = "Argocd labels applied to K8TRE cluster"
 }

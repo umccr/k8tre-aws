@@ -67,44 +67,9 @@ variable "deployment_stage" {
   '-var deployment_stage=0', then '-var deployment_stage=1'.
   Future deployment can use the highest number (default).
   EOT
-}
-
-terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 6.14"
-    }
-
-    kubernetes = {
-      source  = "hashicorp/kubernetes"
-      version = "~> 2.21"
-    }
-
-    http = {
-      source  = "hashicorp/http"
-      version = "~> 3.5"
-    }
-  }
-
-  required_version = ">= 1.10.0"
-
-  # Bootstrapping: Create the bucket using the ./bootstrap directory
-  # Must match aws_s3_bucket.bucket in bootstrap/backend.tf
-  backend "s3" {
-    bucket       = "k8tre-tfstate-0123456789abcdef"
-    key          = "tfstate/dev/k8tre-dev"
-    region       = "eu-west-2"
-    use_lockfile = true
-  }
-}
-
-provider "aws" {
-  region = "eu-west-2"
-  default_tags {
-    tags = {
-      "owner" : "trevolution"
-    }
+  validation {
+    condition     = var.deployment_stage >= 0 && var.deployment_stage <= 3
+    error_message = "deployment_stage must be one of [0, 1, 2, 3]"
   }
 }
 

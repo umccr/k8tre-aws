@@ -1,11 +1,7 @@
 #
 
 variable "deployment_stage" {
-  type = number
-  validation {
-    condition     = var.deployment_stage >= 0 && var.deployment_stage <= 1
-    error_message = "deployment_stage must be 0 or 1"
-  }
+  type        = number
   description = "Multi-stage deployment step, run with 0 the first time, then with 1."
 }
 

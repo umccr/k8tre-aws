@@ -95,7 +95,7 @@ module "eks" {
 # K8S Gateway CRDs: Cilium Helm chart detects whether Gateway CRDs are present
 
 data "http" "gateway_standard_crds" {
-  url = "https://github.com/kubernetes-sigs/gateway-api/releases/download/v${gateway_api_version}/standard-install.yaml"
+  url = "https://github.com/kubernetes-sigs/gateway-api/releases/download/v${var.gateway_api_version}/standard-install.yaml"
 }
 
 # Need to strip out status field

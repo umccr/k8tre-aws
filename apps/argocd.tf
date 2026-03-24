@@ -156,10 +156,8 @@ resource "kubernetes_secret" "argocd-cluster-k8tre-dev" {
       { "argocd.argoproj.io/secret-type" = "cluster" },
       var.k8tre_cluster_labels,
       var.k8tre_cluster_label_overrides,
+      { "inbound-ip" = chomp(data.http.myip.response_body) },
     )
-    annotations = {
-      "inbound-cidrs" = "${chomp(data.http.myip.response_body)}/32"
-    }
   }
   data = {
     config = jsonencode({

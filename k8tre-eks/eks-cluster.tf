@@ -104,9 +104,9 @@ data "http" "gateway_standard_crds" {
 
 locals {
   gateway_crds = provider::kubernetes::manifest_decode_multi(data.http.gateway_standard_crds.response_body)
-  gateway_standard_crds_removed_status = [
+  gateway_standard_crds_removed_status = (var.deployment_stage >= 1) ? [
     for manifest in local.gateway_crds : { for k, v in manifest : k => v if k != "status" }
-  ]
+  ] : []
 }
 
 resource "kubernetes_manifest" "gateway_crds" {
@@ -119,6 +119,7 @@ resource "kubernetes_manifest" "gateway_crds" {
 }
 
 resource "helm_release" "cilium" {
+  count      = (var.deployment_stage >= 1) ? 1 : 0
   depends_on = [kubernetes_manifest.gateway_crds]
 
   name       = "cilium"
@@ -204,6 +205,7 @@ resource "helm_release" "cilium" {
 
 # https://registry.terraform.io/modules/terraform-aws-modules/eks/aws/21.15.1/submodules/eks-managed-node-group
 module "eks_nodegroup" {
+  count = (var.deployment_stage >= 1) ? 1 : 0
 
   # Need a CNI otherwise node group never becomes ready and terraform fails
   depends_on = [helm_release.cilium]
@@ -277,6 +279,7 @@ module "eks_nodegroup" {
 # Now that the nodegroup is ready we can deploy addons
 
 resource "aws_eks_addon" "coredns" {
+  count      = (var.deployment_stage > 1) ? 1 : 0
   depends_on = [module.eks_nodegroup]
 
   cluster_name                = module.eks.cluster_name
@@ -285,6 +288,7 @@ resource "aws_eks_addon" "coredns" {
 }
 
 resource "aws_eks_addon" "eks-pod-identity-agent" {
+  count      = (var.deployment_stage > 1) ? 1 : 0
   depends_on = [module.eks_nodegroup]
 
   cluster_name                = module.eks.cluster_name
@@ -293,6 +297,7 @@ resource "aws_eks_addon" "eks-pod-identity-agent" {
 }
 
 resource "aws_eks_addon" "aws-ebs-csi-driver" {
+  count      = (var.deployment_stage > 1) ? 1 : 0
   depends_on = [module.eks_nodegroup]
 
   cluster_name                = module.eks.cluster_name
@@ -306,6 +311,7 @@ resource "aws_eks_addon" "aws-ebs-csi-driver" {
 }
 
 resource "aws_eks_addon" "aws-efs-csi-driver" {
+  count      = (var.deployment_stage > 1) ? 1 : 0
   depends_on = [module.eks_nodegroup]
 
   cluster_name                = module.eks.cluster_name

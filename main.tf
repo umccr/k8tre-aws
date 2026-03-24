@@ -50,6 +50,18 @@ variable "efs_token" {
   default     = "k8tre-efs"
 }
 
+variable "deployment_stage" {
+  type        = number
+  default     = 3
+  description = <<EOT
+  Multi-stage deployment step.
+  This is necessary because Terraform needs to resolve some resources before
+  running, but those resource amy not exist yet.
+  For the first deployment you must step through these starting at
+  '-var deployment_stage=0', then '-var deployment_stage=1'.
+  Future deployment can use the highest number (default).
+  EOT
+}
 
 terraform {
   required_providers {
@@ -184,6 +196,8 @@ module "k8tre-eks" {
   source = "./k8tre-eks"
   # source = "git::https://github.com/k8tre/k8tre-infrastructure-aws.git?ref=main"
 
+  deployment_stage = var.deployment_stage
+
   cluster_name    = var.name
   vpc_id          = module.vpc.vpc_id
   private_subnets = module.vpc.private_subnets
@@ -233,6 +247,8 @@ module "k8tre-eks" {
 module "k8tre-argocd-eks" {
   source = "./k8tre-eks"
   # source = "git::https://github.com/k8tre/k8tre-infrastructure-aws.git?ref=main"
+
+  deployment_stage = var.deployment_stage
 
   cluster_name    = "${var.name}-argocd"
   vpc_id          = module.vpc.vpc_id

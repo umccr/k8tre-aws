@@ -145,7 +145,7 @@ module "external_dns_pod_identity" {
   name = "external-dns"
 
   attach_external_dns_policy    = true
-  external_dns_hosted_zone_arns = formatlist("arn:aws:route53:::hostedzone/%s", var.hosted_zone_ids)
+  external_dns_hosted_zone_arns = ["arn:aws:route53:::hostedzone/Z0764844247C3P03DJQKT"]
 
   associations = {
     cluster1 = {
@@ -167,14 +167,11 @@ module "cert_manager_pod_identity" {
   attach_cert_manager_policy    = true
   cert_manager_hosted_zone_arns = ["arn:aws:route53:::hostedzone/Z0764844247C3P03DJQKT"]
 
-  association_defaults = {
-    namespace       = "cert-manager"
-    service_account = "cert-manage-sa"
-  }
-
   associations = {
     cluster1 = {
       cluster_name = var.cluster_name
+      namespace       = "cert-manager"
+      service_account = "cert-manager-sa"
     }
   }
   depends_on = [module.eks]
@@ -188,14 +185,11 @@ module "aws_lb_controller_pod_identity" {
   name = "aws-lbc"
   attach_aws_lb_controller_policy = true
 
-  association_defaults = {
-    namespace       = "kube-system"
-    service_account = "aws-load-balancer-controller-sa"
-  }
-
   associations = {
     cluster1 = {
       cluster_name = var.cluster_name
+      namespace       = "kube-system"
+      service_account = "aws-load-balancer-controller-sa"
     }
   }
   depends_on = [module.eks]

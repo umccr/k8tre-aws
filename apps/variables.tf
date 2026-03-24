@@ -60,6 +60,7 @@ variable "argocd_load_balancer" {
 
 variable "efs_name" {
   type        = string
+  default = "k8tre-efs"
   description = "EFS name creation token, must match module.efs var.name"
 }
 

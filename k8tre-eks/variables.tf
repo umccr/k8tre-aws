@@ -115,7 +115,7 @@ variable "create_pod_identities" {
 
 variable "hosted_zone_ids" {
   type        = list(string)
-  default     = []
+  default     = ["Z102323525XKHHDTTX7G7"]
   description = "Route53 hosted zone IDs for External DNS, set to empty to disable"
 }
 

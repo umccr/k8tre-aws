@@ -5,6 +5,7 @@ resource "kubernetes_storage_class" "rwo-default" {
     name = "rwo-default"
     annotations = {
       "description" = "ReadWriteOnce - Single pod read-write access"
+      # "storageclass.kubernetes.io/is-default-class" = "true"
     }
   }
   storage_provisioner = "kubernetes.io/aws-ebs"
@@ -28,6 +29,7 @@ resource "kubernetes_storage_class" "rwx-default" {
     name = "rwx-default"
     annotations = {
       "description" = "ReadWriteMany - Multi-pod shared read-write access"
+      # "storageclass.kubernetes.io/is-default-class" = "true"
     }
   }
   storage_provisioner = "efs.csi.aws.com"

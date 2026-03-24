@@ -50,14 +50,14 @@ provider "kubernetes" {
   token                  = module.k8tre-eks.eks_token
 }
 
-provider "helm" {
-  alias = "k8tre-dev"
-  kubernetes = {
-    host                   = module.k8tre-eks.cluster_endpoint
-    cluster_ca_certificate = base64decode(module.k8tre-eks.cluster_ca_certificate)
-    token                  = module.k8tre-eks.eks_token
-  }
-}
+# provider "helm" {
+#   alias = "k8tre-dev"
+#   kubernetes = {
+#     host                   = module.k8tre-eks.cluster_endpoint
+#     cluster_ca_certificate = base64decode(module.k8tre-eks.cluster_ca_certificate)
+#     token                  = module.k8tre-eks.eks_token
+#   }
+# }
 
 
 provider "kubernetes" {

@@ -1,15 +1,3 @@
-variable "dns_domain" {
-  type        = string
-  default     = "k8tre.internal"
-  description = "DNS domain"
-}
-
-variable "create_public_zone" {
-  type        = bool
-  default     = true
-  description = "Create public DNS zone"
-}
-
 
 ######################################################################
 # EFS

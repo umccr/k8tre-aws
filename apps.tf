@@ -192,7 +192,7 @@ resource "kubernetes_secret" "argocd-cluster-k8tre-dev" {
   count = (var.deployment_stage >= 2) ? 1 : 0
 
   metadata {
-    name      = "argocd-cluster-${data.aws_eks_cluster.deployment.id}"
+    name      = "argocd-cluster-${module.k8tre-eks.cluster_name}"
     namespace = kubernetes_namespace.argocd[0].metadata[0].name
     labels = merge(
       { "argocd.argoproj.io/secret-type" = "cluster" },
@@ -204,15 +204,15 @@ resource "kubernetes_secret" "argocd-cluster-k8tre-dev" {
   data = {
     config = jsonencode({
       awsAuthConfig = {
-        clusterName = data.aws_eks_cluster.deployment.id
-        roleARN     = data.terraform_remote_state.k8tre.outputs.k8tre_eks_access_role
+        clusterName = module.k8tre-eks.cluster_name
+        roleARN     = module.k8tre-eks.eks_access_role
       }
       tlsClientConfig = {
-        caData = data.aws_eks_cluster.deployment.certificate_authority[0].data
+        caData = module.k8tre-eks.cluster_ca_certificate
       }
     })
-    name   = data.aws_eks_cluster.deployment.id
-    server = data.aws_eks_cluster.deployment.endpoint
+    name   = module.k8tre-eks.cluster_name
+    server = module.k8tre-eks.cluster_endpoint
   }
 
   provider = kubernetes.k8tre-dev-argocd

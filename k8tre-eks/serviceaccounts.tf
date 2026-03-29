@@ -12,7 +12,7 @@ locals {
 module "eks_pod_identity_load_balancer" {
   source                          = "terraform-aws-modules/eks-pod-identity/aws"
   version                         = "2.7.0"
-  name                            = "${var.cluster_name}-aws-lb-controller"
+  name                            = "${module.eks.cluster_name}-aws-lb-controller"
   attach_aws_lb_controller_policy = true
 
   # Associate identity with the ServiceAccount that will be created by the
@@ -24,10 +24,9 @@ module "eks_pod_identity_load_balancer" {
 
   associations = {
     cluster1 = {
-      cluster_name = var.cluster_name
+      cluster_name = module.eks.cluster_name
     }
   }
-  depends_on = [module.eks]
 }
 
 module "aws_ebs_csi_pod_identity" {
@@ -51,7 +50,7 @@ module "cluster_autoscaler_pod_identity" {
   count                            = local.create_pod_identities
   name                             = "cluster-autoscaler"
   attach_cluster_autoscaler_policy = true
-  cluster_autoscaler_cluster_names = [var.cluster_name]
+  cluster_autoscaler_cluster_names = [module.eks.cluster_name]
 
   # Associate identity with the ServiceAccount that will be created by the
   # cluster-autoscaler Helm chart
@@ -62,10 +61,9 @@ module "cluster_autoscaler_pod_identity" {
 
   associations = {
     cluster1 = {
-      cluster_name = var.cluster_name
+      cluster_name = module.eks.cluster_name
     }
   }
-  depends_on = [module.eks]
 }
 
 module "external_secrets_pod_identity" {
@@ -86,7 +84,7 @@ module "external_secrets_pod_identity" {
 
   associations = {
     cluster1 = {
-      cluster_name    = var.cluster_name
+      cluster_name    = module.eks.cluster_name
       namespace       = "external-secrets"
       service_account = "external-secrets-sa"
     }
@@ -112,6 +110,7 @@ module "ack_ec2_pod_identity" {
 
   source  = "terraform-aws-modules/eks-pod-identity/aws"
   version = "2.7.0"
+  count   = local.create_pod_identities
   name    = "ack-ec2-controller"
 
   # Associate identity with the ServiceAccount that will be created by the
@@ -123,10 +122,9 @@ module "ack_ec2_pod_identity" {
 
   associations = {
     cluster1 = {
-      cluster_name = var.cluster_name
+      cluster_name = module.eks.cluster_name
     }
   }
-  depends_on = [module.eks]
 
   attach_custom_policy = true
   # TODO: narrow scope to only the EC2 actions we need
@@ -145,11 +143,11 @@ module "external_dns_pod_identity" {
   name = "external-dns"
 
   attach_external_dns_policy    = true
-  external_dns_hosted_zone_arns = ["arn:aws:route53:::hostedzone/Z0764844247C3P03DJQKT"]
+  external_dns_hosted_zone_arns = formatlist("arn:aws:route53:::hostedzone/%s", var.hosted_zone_ids)
 
   associations = {
     cluster1 = {
-      cluster_name    = var.cluster_name
+      cluster_name    = module.eks.cluster_name
       namespace       = "externaldns"
       service_account = "externaldns-sa"
     }

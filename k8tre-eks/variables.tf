@@ -1,3 +1,9 @@
+#
+
+variable "deployment_stage" {
+  type        = number
+  description = "Multi-stage deployment step, run with 0 the first time, then with 1."
+}
 
 variable "cluster_name" {
   type        = string
@@ -24,12 +30,6 @@ variable "k8s_api_cidrs" {
   type        = list(string)
   default     = ["127.0.0.1/8"]
   description = "CIDRs that have access to the K8s API"
-}
-
-variable "service_access_cidrs" {
-  type        = list(string)
-  default     = ["127.0.0.1/8"]
-  description = "CIDRs that have access to services running on K8s"
 }
 
 variable "additional_security_groups" {
@@ -95,17 +95,11 @@ variable "autoupdate_ami" {
   description = "Whether to autoupdate the AMI version when Terraform is run"
 }
 
-variable "autoupdate_addons" {
-  type        = bool
-  default     = false
-  description = "Whether to autoupdate the versions of EKS addons when Terraform is run"
-}
-
-variable "additional_eks_addons" {
-  type        = map(any)
-  default     = {}
-  description = "Map of additional EKS addons"
-}
+# variable "autoupdate_addons" {
+#   type        = bool
+#   default     = false
+#   description = "Whether to autoupdate the versions of EKS addons when Terraform is run"
+# }
 
 variable "create_pod_identities" {
   type        = bool
@@ -115,7 +109,7 @@ variable "create_pod_identities" {
 
 variable "hosted_zone_ids" {
   type        = list(string)
-  default     = ["Z102323525XKHHDTTX7G7"]
+  default     = []
   description = "Route53 hosted zone IDs for External DNS, set to empty to disable"
 }
 
@@ -155,6 +149,24 @@ variable "github_oidc_role_sub" {
   description = "List of githubusercontent.com:sub repositories and refs allowed to use the OIDC role"
   # default     = ["repo:k8tre/k8tre:ref:refs/heads/main"]
   default = []
+}
+
+variable "additional_admin_principals" {
+  type        = map(string)
+  description = "Additional EKS admin pricipals"
+  default     = {}
+}
+
+variable "gateway_api_version" {
+  type        = string
+  description = "Gateway API CRD version"
+  default     = "1.4.1"
+}
+
+variable "cilium_version" {
+  type        = string
+  description = "Cilium version"
+  default     = "1.19.1"
 }
 
 variable "github_lookup_oidc_provider" {

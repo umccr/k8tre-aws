@@ -1,24 +1,16 @@
-variable "dns_domain" {
-  type        = string
-  default     = "k8tre.internal"
-  description = "DNS domain"
-}
-
-variable "create_public_zone" {
-  type        = bool
-  default     = true
-  description = "Create public DNS zone"
-}
-
 
 ######################################################################
 # EFS
 
+locals {
+  efs_token = var.efs_token == null ? var.name : var.efs_token
+}
+
 module "efs" {
   source  = "./efs"
-  name    = "k8tre-efs"
+  name    = local.efs_token
   vpc_id  = module.vpc.vpc_id
-  subnets = slice(module.vpc.private_subnets, 0, 2)
+  subnets = module.vpc.private_subnets
 }
 
 

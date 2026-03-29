@@ -94,38 +94,43 @@ module "eks" {
 
 # K8S Gateway CRDs: Cilium Helm chart detects whether Gateway CRDs are present
 # so CRDs must be installed first
-
-data "http" "gateway_standard_crds" {
-  url = "https://github.com/kubernetes-sigs/gateway-api/releases/download/v${var.gateway_api_version}/standard-install.yaml"
+locals {
+  crds = {
+    gateway = "https://github.com/kubernetes-sigs/gateway-api/releases/download/v${var.gateway_api_version}/standard-install.yaml"
+    loadbalancer = "https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/refs/tags/v3.0.0/helm/aws-load-balancer-controller/crds/crds.yaml"
+    loadbalancer_gateway = "https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/refs/tags/v3.0.0/helm/aws-load-balancer-controller/crds/gateway-crds.yaml"
+  }
 }
 
-# Need to strip out status field
-# https://github.com/hashicorp/terraform-provider-kubernetes/issues/2739
-# https://github.com/hashicorp/terraform-provider-kubernetes/issues/1428#issuecomment-3053948214
+data "http" "crds" {
+  for_each = local.crds
+  url      = each.value
+}
 
 locals {
-  gateway_crds = provider::kubernetes::manifest_decode_multi(data.http.gateway_standard_crds.response_body)
-  gateway_standard_crds_removed_status = [
-    for manifest in local.gateway_crds : { for k, v in manifest : k => v if k != "status" }
-  ]
-
-  gateway_manifests = flatten([
-    var.deployment_stage >= 1 ? [local.gateway_standard_crds_removed_status] : []
-  ])
+  decoded_manifests = {
+    for manifest_type, http_data in data.http.crds :
+    manifest_type => provider::kubernetes::manifest_decode_multi(http_data.response_body)
+  }
+  manifests_no_status = merge([
+    for manifest_type, manifests in local.decoded_manifests : {
+      for manifest in manifests :
+      "${manifest_type}--${manifest.kind}--${manifest.metadata.name}" => {
+        for k, v in manifest : k => v if k != "status"
+      }
+    }
+  ]...)
 }
 
-resource "kubernetes_manifest" "gateway_crds" {
-  for_each = {
-    for manifest in local.gateway_manifests :
-    "${manifest.kind}--${manifest.metadata.name}" => manifest
-  }
-
+resource "kubernetes_manifest" "crds" {
+  for_each = local.manifests_no_status
   manifest = each.value
+  provider = kubernetes.k8tre-dev
 }
 
 resource "helm_release" "cilium" {
   count      = (var.deployment_stage >= 1) ? 1 : 0
-  depends_on = [kubernetes_manifest.gateway_crds]
+  depends_on = [kubernetes_manifest.crds]
 
   name       = "cilium"
   repository = "https://helm.cilium.io/"

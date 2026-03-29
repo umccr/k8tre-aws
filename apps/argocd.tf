@@ -18,7 +18,7 @@ resource "kubernetes_config_map" "cmp_plugin" {
           args:
             - |
               kustomize build --enable-helm --load-restrictor LoadRestrictionsNone . | \
-              sed "s/\$${ENVIRONMENT}/$${ARGOCD_ENV_ENVIRONMENT}/g; s/\$${DOMAIN}/$${ARGOCD_ENV_DOMAIN}/g; s/\$${INBOUND_CIDRS}/$${ARGOCD_ENV_INBOUND_CIDRS}/g; s/\\.ENVIRONMENT\\./.$${ARGOCD_ENV_ENVIRONMENT}./g; s/\\.DOMAIN/.$${ARGOCD_ENV_DOMAIN}/g; s/^ENVIRONMENT$/$${ARGOCD_ENV_ENVIRONMENT}/g; s/^DOMAIN$/$${ARGOCD_ENV_DOMAIN}/g"
+              sed "s/\$${ENVIRONMENT}/$${ARGOCD_ENV_ENVIRONMENT}/g; s/\$${DOMAIN}/$${ARGOCD_ENV_DOMAIN}/g; s/\\.ENVIRONMENT\\./.$${ARGOCD_ENV_ENVIRONMENT}./g; s/\\.DOMAIN/.$${ARGOCD_ENV_DOMAIN}/g; s/^ENVIRONMENT$/$${ARGOCD_ENV_ENVIRONMENT}/g; s/^DOMAIN$/$${ARGOCD_ENV_DOMAIN}/g"
     EOT
   }
 
@@ -141,11 +141,6 @@ resource "kubernetes_namespace" "argocd" {
   provider = kubernetes.k8tre-dev-argocd
 }
 
-# Get IP of caller to limit inbound connections to the gateway
-data "http" "myip" {
-  url = "https://checkip.amazonaws.com/"
-}
-
 # Add k8tre-dev cluster to ArgoCD
 # https://argo-cd.readthedocs.io/en/release-3.1/operator-manual/declarative-setup/#eks
 resource "kubernetes_secret" "argocd-cluster-k8tre-dev" {
@@ -155,8 +150,7 @@ resource "kubernetes_secret" "argocd-cluster-k8tre-dev" {
     labels = merge(
       { "argocd.argoproj.io/secret-type" = "cluster" },
       var.k8tre_cluster_labels,
-      var.k8tre_cluster_label_overrides,
-      { "inbound-ip" = chomp(data.http.myip.response_body) },
+      var.k8tre_cluster_label_overrides
     )
   }
   data = {

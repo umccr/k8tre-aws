@@ -10,6 +10,9 @@ on:
 # https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#concurrency
 concurrency: ci-${{ github.ref }}
 
+permissions:
+  contents: read
+
 jobs:
   deploy:
     runs-on: ubuntu-24.04
@@ -28,15 +31,17 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Install terraform
-        uses: hashicorp/setup-terraform@v3
+        uses: hashicorp/setup-terraform@5e8dbf3c6d9deaf4193ca7a8fb23f2ac83bb6c85 # v4.0.0
         with:
           terraform_version: "1.12.1"
 
       - name: Configure AWS credentials from prod account
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7 # v6.0.0
         with:
           role-to-assume: "arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/${{ env.GITHUB_OIDC_ROLE }}"
           aws-region: eu-west-2
@@ -52,7 +57,7 @@ jobs:
 
       - name: Deploy
         run: |
-          if [ "${{ github.ref }}" == main ]; then
+          if [ "${GITHUB_REF}" == main ]; then
             terraform $TERRAFORM_DEPLOY_COMMAND
           else
             terraform plan

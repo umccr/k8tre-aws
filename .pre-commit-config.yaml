@@ -1,0 +1,26 @@
+# Install either pre-commit or prek
+#   pre-commit run -a
+#   prek run -a
+
+repos:
+  # We can't run any CI tests so use as many static linters as possible
+  - repo: https://github.com/antonbabenko/pre-commit-terraform
+    rev: v1.105.0
+    hooks:
+      - id: terraform_fmt
+      - id: terraform_tflint
+      - id: terraform_validate
+
+  # Autoformat: markdown, yaml, javascript (see the file .prettierignore)
+  - repo: https://github.com/rbubley/mirrors-prettier
+    rev: v3.8.1
+    hooks:
+      - id: prettier
+
+  # github actions security checks
+  - repo: https://github.com/zizmorcore/zizmor-pre-commit
+    rev: v1.23.1
+    hooks:
+      - id: zizmor
+        args:
+          - --fix=safe

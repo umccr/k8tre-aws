@@ -33,8 +33,9 @@ jobs:
           tflint_version: v0.61.0
           cache: true
 
-      - name: Terraform init
+      - uses: j178/prek-action@53276d8b0d10f8b6672aa85b4588c6921d0370cc # v2.0.1
+
+      - name: Validate Terraform
         run: |
           terraform init -backend=false
-
-      - uses: j178/prek-action@53276d8b0d10f8b6672aa85b4588c6921d0370cc # v2.0.1
+          terraform validate

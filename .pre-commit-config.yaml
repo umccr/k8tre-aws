@@ -9,7 +9,8 @@ repos:
     hooks:
       - id: terraform_fmt
       - id: terraform_tflint
-      - id: terraform_validate
+      # terraform_validate has problems with mismatching lock files in CI
+      # - id: terraform_validate
 
   # Autoformat: markdown, yaml, javascript (see the file .prettierignore)
   - repo: https://github.com/rbubley/mirrors-prettier

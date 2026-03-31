@@ -41,3 +41,18 @@ module "dnsresolver" {
 
   create_public_zone = var.create_public_zone
 }
+
+
+######################################################################
+# Certificate
+
+module "certificate" {
+  count = var.request_certificate == "none" ? 0 : 1
+
+  source = "./certificate"
+
+  domain_name               = "*.${var.dns_domain}"
+  subject_alternative_names = [var.dns_domain]
+
+  request_acm_certificate = var.request_certificate == "acm" ? true : false
+}

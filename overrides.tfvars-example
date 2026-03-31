@@ -8,6 +8,8 @@ allowed_cidrs = [
 
 dns_domain         = "k8tre-dev-eks.example.org"
 
+request_certificate = "acm"
+
 additional_admin_principals = {
   additional-role = "arn:aws:iam::000000000000:role/existing-role"
 }

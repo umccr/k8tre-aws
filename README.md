@@ -33,6 +33,11 @@ You must modify `terraform.backend.s3` `bucket` to match the one in `bootstrap/b
 You can install K8TRE AWS with no changes, but you will most likely want to set some variables.
 Either modify [`variables.tf`](variables.tf), or copy [`overrides.tfvars-example`](overrides.tfvars-example) to `overrides.tfvars` and edit.
 
+Particularly important variables include
+
+- `dns_domain`: The domain for K8TRE
+- `request_certificate`: K8TRE requires a HTTPS certificate to be stored in AWS ACM.
+
 ### Run Terraform
 
 Activate your AWS credentials in your shell environment.
@@ -118,10 +123,7 @@ When making changes to this repository run:
 
 ```sh
 terraform validate
-terraform fmt -recursive
-
-tflint --init
-tflint --recursive
-
-npx prettier@3.8.1 --write '**/*.{yaml,yml,md}'
+prek run -a
 ```
+
+prek (or pre-commit) will run some autoformatters, and TFlint.

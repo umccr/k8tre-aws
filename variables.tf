@@ -88,6 +88,20 @@ variable "create_public_zone" {
   description = "Create public DNS zone"
 }
 
+variable "request_certificate" {
+  type        = string
+  default     = "selfsigned"
+  description = <<-EOT
+  Request an ACM certificate (requires manual DNS validation),
+  create a self-signed certificate,
+  or none (fully manage certificate yourself)
+  EOT
+  validation {
+    condition     = contains(["acm", "selfsigned", "none"], var.request_certificate)
+    error_message = "Must be one of [acm, selfsigned, none]"
+  }
+}
+
 variable "k8tre_cluster_labels" {
   type = map(string)
   default = {

@@ -43,3 +43,8 @@ output "k8tre_eks_access_role" {
   description = "K8TRE EKS deployment role ARN"
   value       = module.k8tre-eks.eks_access_role
 }
+
+output "dns_validation_records" {
+  description = "DNS validation records to be created for ACM certificate"
+  value       = module.certificate[*].dns_validation_records
+}

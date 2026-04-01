@@ -152,6 +152,55 @@ prek (or pre-commit) will run some autoformatters, and TFlint.
 
 <!-- prettier-ignore-start -->
 <!-- BEGIN_TF_DOCS -->
+### Modules
 
+| Name | Source | Version |
+|------|--------|---------|
+| <a name="module_certificate"></a> [certificate](#module\_certificate) | ./certificate | n/a |
+| <a name="module_dnsresolver"></a> [dnsresolver](#module\_dnsresolver) | ./dnsresolver | n/a |
+| <a name="module_efs"></a> [efs](#module\_efs) | ./efs | n/a |
+| <a name="module_k8tre-argocd-eks"></a> [k8tre-argocd-eks](#module\_k8tre-argocd-eks) | ./k8tre-eks | n/a |
+| <a name="module_k8tre-eks"></a> [k8tre-eks](#module\_k8tre-eks) | ./k8tre-eks | n/a |
+| <a name="module_vpc"></a> [vpc](#module\_vpc) | terraform-aws-modules/vpc/aws | 6.6.0 |
+
+### Inputs
+
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_additional_admin_principals"></a> [additional\_admin\_principals](#input\_additional\_admin\_principals) | Additional EKS admin principals | `map(string)` | `{}` | no |
+| <a name="input_allowed_cidrs"></a> [allowed\_cidrs](#input\_allowed\_cidrs) | CIDRs allowed to access K8TRE ('myip' is dynamically replaced by your current IP) | `list(string)` | <pre>[<br/>  "myip"<br/>]</pre> | no |
+| <a name="input_argocd_version"></a> [argocd\_version](#input\_argocd\_version) | ArgoCD Helm chart version | `string` | `"9.4.15"` | no |
+| <a name="input_create_public_zone"></a> [create\_public\_zone](#input\_create\_public\_zone) | Create public DNS zone | `bool` | `false` | no |
+| <a name="input_deployment_stage"></a> [deployment\_stage](#input\_deployment\_stage) | Multi-stage deployment step.<br/>  This is necessary because Terraform needs to resolve some resources before<br/>  running, but those resource amy not exist yet.<br/>  For the first deployment you must step through these starting at<br/>  '-var deployment\_stage=0', then '-var deployment\_stage=1'.<br/>  Future deployment can use the highest number (default). | `number` | `3` | no |
+| <a name="input_dns_domain"></a> [dns\_domain](#input\_dns\_domain) | DNS domain | `string` | `"k8tre.internal"` | no |
+| <a name="input_efs_token"></a> [efs\_token](#input\_efs\_token) | EFS name creation token, if null default to var.name | `string` | `null` | no |
+| <a name="input_enable_github_oidc"></a> [enable\_github\_oidc](#input\_enable\_github\_oidc) | Create GitHub OIDC role | `bool` | `false` | no |
+| <a name="input_install_k8tre"></a> [install\_k8tre](#input\_install\_k8tre) | Install K8TRE root app-of-apps | `bool` | `true` | no |
+| <a name="input_k8tre_cluster_label_overrides"></a> [k8tre\_cluster\_label\_overrides](#input\_k8tre\_cluster\_label\_overrides) | Additional labels merged with k8tre\_cluster\_labels and applied to K8TRE cluster | `map(string)` | `{}` | no |
+| <a name="input_k8tre_cluster_labels"></a> [k8tre\_cluster\_labels](#input\_k8tre\_cluster\_labels) | Argocd labels applied to K8TRE cluster | `map(string)` | <pre>{<br/>  "environment": "dev",<br/>  "external-dns": "aws",<br/>  "secret-store": "aws",<br/>  "skip-metallb": "true",<br/>  "vendor": "aws"<br/>}</pre> | no |
+| <a name="input_k8tre_github_ref"></a> [k8tre\_github\_ref](#input\_k8tre\_github\_ref) | K8TRE git ref (commit/branch/tag) | `string` | `"main"` | no |
+| <a name="input_k8tre_github_repo"></a> [k8tre\_github\_repo](#input\_k8tre\_github\_repo) | K8TRE GitHub organisation and repository to install | `string` | `"k8tre/k8tre"` | no |
+| <a name="input_name"></a> [name](#input\_name) | Name used for most resources | `string` | `"k8tre-dev"` | no |
+| <a name="input_number_availability_zones"></a> [number\_availability\_zones](#input\_number\_availability\_zones) | Number of availability zones to use for EKS.<br/>EBS volumes are tied to a single AZ, so if you have multiple AZs you must<br/>ensure you always have sufficient nodes in all AZs to run all pods<br/>that use EBS. | `number` | `1` | no |
+| <a name="input_private_subnets"></a> [private\_subnets](#input\_private\_subnets) | Private subnet CIDRs to create. These IPs are used by EKS pods so make it large! | `list(string)` | <pre>[<br/>  "10.0.64.0/18",<br/>  "10.0.128.0/18"<br/>]</pre> | no |
+| <a name="input_public_subnets"></a> [public\_subnets](#input\_public\_subnets) | Public subnet CIDRs to create | `list(string)` | <pre>[<br/>  "10.0.1.0/24",<br/>  "10.0.2.0/24"<br/>]</pre> | no |
+| <a name="input_region"></a> [region](#input\_region) | AWS region | `string` | `"eu-west-2"` | no |
+| <a name="input_request_certificate"></a> [request\_certificate](#input\_request\_certificate) | Request an ACM certificate (requires manual DNS validation),<br/>create a self-signed certificate,<br/>or none (fully manage certificate yourself) | `string` | `"selfsigned"` | no |
+| <a name="input_vpc_cidr"></a> [vpc\_cidr](#input\_vpc\_cidr) | VPC CIDR to create | `string` | `"10.0.0.0/16"` | no |
+
+### Outputs
+
+| Name | Description |
+|------|-------------|
+| <a name="output_dns_validation_records"></a> [dns\_validation\_records](#output\_dns\_validation\_records) | DNS validation records to be created for ACM certificate |
+| <a name="output_efs_token"></a> [efs\_token](#output\_efs\_token) | EFS name creation token |
+| <a name="output_k8tre_argocd_cluster_name"></a> [k8tre\_argocd\_cluster\_name](#output\_k8tre\_argocd\_cluster\_name) | K8TRE dev cluster name |
+| <a name="output_k8tre_cluster_name"></a> [k8tre\_cluster\_name](#output\_k8tre\_cluster\_name) | K8TRE dev cluster name |
+| <a name="output_k8tre_eks_access_role"></a> [k8tre\_eks\_access\_role](#output\_k8tre\_eks\_access\_role) | K8TRE EKS deployment role ARN |
+| <a name="output_kubeconfig_command_k8tre-argocd-dev"></a> [kubeconfig\_command\_k8tre-argocd-dev](#output\_kubeconfig\_command\_k8tre-argocd-dev) | Create kubeconfig for k8tre-argocd-dev |
+| <a name="output_kubeconfig_command_k8tre-dev"></a> [kubeconfig\_command\_k8tre-dev](#output\_kubeconfig\_command\_k8tre-dev) | Create kubeconfig for k8tre-dev |
+| <a name="output_name"></a> [name](#output\_name) | Name used for most resources |
+| <a name="output_service_access_prefix_list"></a> [service\_access\_prefix\_list](#output\_service\_access\_prefix\_list) | ID of the prefix list that can access services running on K8s |
+| <a name="output_vpc_cidr"></a> [vpc\_cidr](#output\_vpc\_cidr) | VPC CIDR |
 <!-- END_TF_DOCS -->
 <!-- prettier-ignore-end -->

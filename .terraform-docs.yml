@@ -1,0 +1,12 @@
+# https://terraform-docs.io/user-guide/configuration/
+
+formatter: markdown
+
+sections:
+  show:
+    - inputs
+    - modules
+    - outputs
+
+settings:
+  indent: 3

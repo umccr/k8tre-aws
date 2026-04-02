@@ -10,6 +10,11 @@ jobs:
   lint:
     runs-on: ubuntu-24.04
     timeout-minutes: 2
+    env:
+      TERRAFORM_VERSION: 1.12.1
+      TERRAFORM_DOCS_VERSION: 0.21.0
+      TFLINT_VERSION: 0.61.0
+
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -24,16 +29,23 @@ jobs:
       - name: Install terraform
         uses: hashicorp/setup-terraform@5e8dbf3c6d9deaf4193ca7a8fb23f2ac83bb6c85 # v4.0.0
         with:
-          terraform_version: "1.12.1"
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
 
       - name: Setup TFLint
         uses: terraform-linters/setup-tflint@b480b8fcdaa6f2c577f8e4fa799e89e756bb7c93 # v6.2.2
         with:
           # https://github.com/terraform-linters/tflint/tags
-          tflint_version: v0.61.0
+          tflint_version: v${{ env.TFLINT_VERSION }}
           cache: true
 
-      - uses: j178/prek-action@53276d8b0d10f8b6672aa85b4588c6921d0370cc # v2.0.1
+      - name: Install terraform-docs
+        run: |
+          mkdir -p "/$HOME/.local/bin"
+          curl -sfSL "https://terraform-docs.io/dl/v${TERRAFORM_DOCS_VERSION}/terraform-docs-v${TERRAFORM_DOCS_VERSION}-linux-amd64.tar.gz" | \
+            tar -zx -C "/$HOME/.local/bin" terraform-docs
+
+      - name: Run prek (pre-commit)
+        uses: j178/prek-action@53276d8b0d10f8b6672aa85b4588c6921d0370cc # v2.0.1
 
       - name: Validate Terraform
         run: |

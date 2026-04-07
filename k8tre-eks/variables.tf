@@ -170,5 +170,5 @@ variable "gateway_api_version" {
 variable "cilium_version" {
   type        = string
   description = "Cilium version"
-  default     = "1.19.1"
+  default     = "1.19.2"
 }

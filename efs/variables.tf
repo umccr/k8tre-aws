@@ -20,3 +20,9 @@ variable "subnets" {
   ]
   description = "List of subnet IDs"
 }
+
+variable "kms_key_arn" {
+  type        = string
+  description = "KMS encryption key ARN"
+  default     = null
+}

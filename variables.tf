@@ -50,6 +50,17 @@ variable "private_subnets" {
   ]
 }
 
+variable "number_availability_zones" {
+  type        = number
+  default     = 1
+  description = <<-EOT
+  Number of availability zones to use for EKS.
+  EBS volumes are tied to a single AZ, so if you have multiple AZs you must
+  ensure you always have sufficient nodes in all AZs to run all pods
+  that use EBS.
+  EOT
+}
+
 variable "allowed_cidrs" {
   type        = list(string)
   description = "CIDRs allowed to access K8TRE ('myip' is dynamically replaced by your current IP)"
@@ -86,6 +97,20 @@ variable "create_public_zone" {
   type        = bool
   default     = false
   description = "Create public DNS zone"
+}
+
+variable "request_certificate" {
+  type        = string
+  default     = "selfsigned"
+  description = <<-EOT
+  Request an ACM certificate (requires manual DNS validation),
+  create a self-signed certificate,
+  or none (fully manage certificate yourself)
+  EOT
+  validation {
+    condition     = contains(["acm", "selfsigned", "none"], var.request_certificate)
+    error_message = "Must be one of [acm, selfsigned, none]"
+  }
 }
 
 variable "k8tre_cluster_labels" {

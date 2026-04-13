@@ -47,10 +47,14 @@ variable "cluster_security_group_additional_rules" {
 
 variable "number_azs" {
   type = number
-  # Use just one so we don't have to deal with node/volume affinity-
+  # Default to just one so we don't have to deal with node/volume affinity-
   # can't use EBS volumes across AZs
   default     = 1
   description = "Number of AZs to use"
+  validation {
+    condition     = var.number_azs >= 0 && var.number_azs <= length(var.private_subnets)
+    error_message = "number_azs must be > 0 and <= number of private_subnets"
+  }
 }
 
 variable "instance_type_wg1" {
@@ -166,7 +170,7 @@ variable "gateway_api_version" {
 variable "cilium_version" {
   type        = string
   description = "Cilium version"
-  default     = "1.19.1"
+  default     = "1.19.2"
 }
 
 variable "github_lookup_oidc_provider" {

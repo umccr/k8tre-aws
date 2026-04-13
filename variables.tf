@@ -158,3 +158,9 @@ variable "k8tre_github_ref" {
   default     = "main"
   description = "K8TRE git ref (commit/branch/tag)"
 }
+
+variable "argocd_load_balancer" {
+  type        = bool
+  default     = true
+  description = "Whether to set the type to `LoadBalancer` for the argocd service enabling external access"
+}

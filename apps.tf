@@ -115,13 +115,23 @@ resource "aws_secretsmanager_secret" "argocd_password" {
   recovery_window_in_days = 0
 }
 
-data "aws_secretsmanager_random_password" "argocd_password" {
-  password_length = 20
+resource "random_password" "argocd_password" {
+  length  = 20
+  special = true
 }
 
 resource "aws_secretsmanager_secret_version" "argocd_password" {
   secret_id     = aws_secretsmanager_secret.argocd_password.id
-  secret_string = data.aws_secretsmanager_random_password.argocd_password.random_password
+  secret_string = random_password.argocd_password.result
+}
+
+resource "terraform_data" "argocd_password_bcrypt" {
+  input            = bcrypt(random_password.argocd_password.result)
+  triggers_replace = [random_password.argocd_password.result]
+
+  lifecycle {
+    ignore_changes = [input]
+  }
 }
 
 output "k8tre-argocd-secret" {
@@ -154,7 +164,7 @@ resource "helm_release" "argocd" {
     },
     {
       name  = "configs.secret.argocdServerAdminPassword"
-      value = bcrypt(aws_secretsmanager_secret_version.argocd_password.secret_string)
+      value = terraform_data.argocd_password_bcrypt.output
     },
     var.argocd_load_balancer ? [{
       name  = "server.service.type"

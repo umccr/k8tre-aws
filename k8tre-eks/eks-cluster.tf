@@ -330,14 +330,14 @@ resource "aws_eks_addon" "aws-efs-csi-driver" {
 }
 
 resource "aws_autoscaling_schedule" "scale_to_zero" {
-  count = var.scale_to_zero_recurrence == null ? 0 : 1
+  count = (var.deployment_stage >= 1 && var.scale_to_zero_recurrence != null) ? 1 : 0
 
   scheduled_action_name  = "ScaleToZero"
   desired_capacity       = 0
   min_size               = 0
   max_size               = var.wg1_max_size
   recurrence             = var.scale_to_zero_recurrence
-  autoscaling_group_name = module.eks.eks_managed_node_groups_autoscaling_group_names[0]
+  autoscaling_group_name = module.eks_nodegroup[0].node_group_autoscaling_group_names[0]
 }
 
 data "aws_eks_cluster_auth" "k8tre" {

@@ -19,6 +19,11 @@ terraform {
       source  = "hashicorp/http"
       version = "~> 3.5"
     }
+
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.6"
+    }
   }
 
   required_version = ">= 1.10.0"
@@ -26,9 +31,9 @@ terraform {
   # Bootstrapping: Create the bucket using the ./bootstrap directory
   # Must match aws_s3_bucket.bucket in bootstrap/backend.tf
   backend "s3" {
-    bucket       = "k8tre-tfstate-0123456789abcdef"
+    bucket       = "tfstate-k8tre-dev-ff5e2f01a9f253fc"
     key          = "tfstate/dev/k8tre-dev"
-    region       = "eu-west-2"
+    region       = "ap-southeast-2"
     use_lockfile = true
   }
 }
@@ -37,7 +42,9 @@ provider "aws" {
   region = var.region
   default_tags {
     tags = {
-      "owner" : "trevolution"
+      "umccr-org:Creator" = "terraform"
+      "umccr-org:Product" = "k8tre"
+      "umccr-org:Source"  = "https://github.com/umccr/k8tre-aws"
     }
   }
 }

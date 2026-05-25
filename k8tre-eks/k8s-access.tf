@@ -9,7 +9,7 @@ locals {
 
 data "aws_iam_openid_connect_provider" "github_oidc" {
   count = var.github_lookup_oidc_provider && var.github_oidc_rolename != null ? 1 : 0
-  url = local.github_oidc_provider_url
+  url   = local.github_oidc_provider_url
 }
 
 # Use in conjunction with a role, and

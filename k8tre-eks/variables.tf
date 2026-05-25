@@ -174,13 +174,13 @@ variable "cilium_version" {
 }
 
 variable "github_lookup_oidc_provider" {
-  type = bool
+  type        = bool
   description = "Whether to lookup an existing github OIDC provider"
-  default = false
+  default     = false
 }
 
 variable "scale_to_zero_recurrence" {
-  type = string
+  type        = string
   description = "The recurrence to run a scale to 0 cron job on the autoscaling group. Set to null to not create an autoscaling schedule."
   # Run every day as midnight.
   default = "0 0 * * *"

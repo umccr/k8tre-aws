@@ -176,4 +176,3 @@ module "k8tre-argocd-eks" {
 
   additional_admin_principals = var.additional_admin_principals
 }
-

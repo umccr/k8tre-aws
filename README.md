@@ -188,7 +188,7 @@ prek (or pre-commit) will run some autoformatters, and TFlint.
 ### Modules
 
 | Name | Source | Version |
-|------|--------|---------|
+| ---- | ------ | ------- |
 | <a name="module_certificate"></a> [certificate](#module\_certificate) | ./certificate | n/a |
 | <a name="module_dnsresolver"></a> [dnsresolver](#module\_dnsresolver) | ./dnsresolver | n/a |
 | <a name="module_efs"></a> [efs](#module\_efs) | ./efs | n/a |
@@ -199,9 +199,10 @@ prek (or pre-commit) will run some autoformatters, and TFlint.
 ### Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_additional_admin_principals"></a> [additional\_admin\_principals](#input\_additional\_admin\_principals) | Additional EKS admin principals | `map(string)` | `{}` | no |
 | <a name="input_allowed_cidrs"></a> [allowed\_cidrs](#input\_allowed\_cidrs) | CIDRs allowed to access K8TRE ('myip' is dynamically replaced by your current IP) | `list(string)` | <pre>[<br/>  "myip"<br/>]</pre> | no |
+| <a name="input_argocd_load_balancer"></a> [argocd\_load\_balancer](#input\_argocd\_load\_balancer) | Whether to set the type to `LoadBalancer` for the argocd service enabling external access | `bool` | `true` | no |
 | <a name="input_argocd_version"></a> [argocd\_version](#input\_argocd\_version) | ArgoCD Helm chart version | `string` | `"9.4.15"` | no |
 | <a name="input_create_public_zone"></a> [create\_public\_zone](#input\_create\_public\_zone) | Create public DNS zone | `bool` | `false` | no |
 | <a name="input_deployment_stage"></a> [deployment\_stage](#input\_deployment\_stage) | Multi-stage deployment step.<br/>  This is necessary because Terraform needs to resolve some resources before<br/>  running, but those resource amy not exist yet.<br/>  For the first deployment you must step through these starting at<br/>  '-var deployment\_stage=0', then '-var deployment\_stage=1'.<br/>  Future deployment can use the highest number (default). | `number` | `3` | no |
@@ -224,9 +225,10 @@ prek (or pre-commit) will run some autoformatters, and TFlint.
 ### Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_dns_validation_records"></a> [dns\_validation\_records](#output\_dns\_validation\_records) | DNS validation records to be created for ACM certificate |
 | <a name="output_efs_token"></a> [efs\_token](#output\_efs\_token) | EFS name creation token |
+| <a name="output_k8tre-argocd-secret"></a> [k8tre-argocd-secret](#output\_k8tre-argocd-secret) | n/a |
 | <a name="output_k8tre_argocd_cluster_name"></a> [k8tre\_argocd\_cluster\_name](#output\_k8tre\_argocd\_cluster\_name) | K8TRE dev cluster name |
 | <a name="output_k8tre_cluster_name"></a> [k8tre\_cluster\_name](#output\_k8tre\_cluster\_name) | K8TRE dev cluster name |
 | <a name="output_k8tre_eks_access_role"></a> [k8tre\_eks\_access\_role](#output\_k8tre\_eks\_access\_role) | K8TRE EKS deployment role ARN |

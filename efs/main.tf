@@ -47,4 +47,3 @@ resource "aws_efs_mount_target" "mount" {
   subnet_id       = var.subnets[count.index]
   security_groups = [aws_security_group.efs_sg.id]
 }
-

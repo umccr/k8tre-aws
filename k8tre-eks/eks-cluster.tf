@@ -333,10 +333,10 @@ resource "aws_autoscaling_schedule" "scale_to_zero" {
   count = var.scale_to_zero_recurrence == null ? 0 : 1
 
   scheduled_action_name  = "ScaleToZero"
-  desired_capacity = 0
-  min_size     = 0
-  max_size     = var.wg1_max_size
-  recurrence = var.scale_to_zero_recurrence
+  desired_capacity       = 0
+  min_size               = 0
+  max_size               = var.wg1_max_size
+  recurrence             = var.scale_to_zero_recurrence
   autoscaling_group_name = module.eks.eks_managed_node_groups_autoscaling_group_names[0]
 }
 

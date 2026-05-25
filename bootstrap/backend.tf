@@ -21,9 +21,9 @@ provider "aws" {
   region = var.region
   default_tags {
     tags = {
-      "umccr-org:Creator": "terraform"
-      "umccr-org:Product": "k8tre"
-      "umccr-org:Source": "https://github.com/umccr/k8tre-aws"
+      "umccr-org:Creator" : "terraform"
+      "umccr-org:Product" : "k8tre"
+      "umccr-org:Source" : "https://github.com/umccr/k8tre-aws"
     }
   }
 }
@@ -57,13 +57,13 @@ data "aws_iam_policy_document" "ssl_only" {
   statement {
     principals {
       identifiers = ["*"]
-      type = "*"
+      type        = "*"
     }
     actions = ["s3:*"]
-    effect = "Deny"
+    effect  = "Deny"
     condition {
       test     = "Bool"
-      values = ["false"]
+      values   = ["false"]
       variable = "aws:SecureTransport"
     }
     resources = [

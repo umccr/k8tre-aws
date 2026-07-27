@@ -79,6 +79,17 @@ variable "efs_token" {
   default     = null
 }
 
+variable "eks_autoupdate_addons" {
+  type        = bool
+  default     = false
+  description = <<-EOT
+    Whether to autoupdate the versions of EKS addons when Terraform is run.
+    If you plan to upgrade EKS you may need to set this to `true` before the
+    upgrade since the current addon versions may not be compatible with the
+    planned upgrade.
+    EOT
+}
+
 variable "enable_github_oidc" {
   type        = bool
   description = "Create GitHub OIDC role"
@@ -163,4 +174,10 @@ variable "argocd_load_balancer" {
   type        = bool
   default     = true
   description = "Whether to set the type to `LoadBalancer` for the argocd service enabling external access"
+}
+
+variable "additional_k8s_manifests" {
+  type        = list(string)
+  default     = []
+  description = "List of paths to additional K8s manifests (one per file, multidoc YAML files are not supported)"
 }

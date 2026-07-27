@@ -99,7 +99,7 @@ module "k8tre-eks" {
   vpc_id          = module.vpc.vpc_id
   private_subnets = module.vpc.private_subnets
 
-  # k8s_version =
+  k8s_version = "1.35"
 
   # CIDRs that have access to the K8S API, e.g. `0.0.0.0/0`
   k8s_api_cidrs = local.allow_ips
@@ -124,7 +124,7 @@ module "k8tre-eks" {
   # additional_eks_addons = {}
 
   # autoupdate_ami = false
-  # autoupdate_addons = false
+  autoupdate_addons = var.eks_autoupdate_addons
 
   create_pod_identities = true
   hosted_zone_ids = concat(
@@ -135,6 +135,10 @@ module "k8tre-eks" {
   github_oidc_rolename = var.enable_github_oidc ? "${var.name}-github-oidc" : null
 
   additional_admin_principals = var.additional_admin_principals
+
+  # Storage study-data bucket and read-only S3 pod mounting are not needed.
+  # s3_mountable_bucket_arns = [aws_s3_bucket.studydata.arn]
+  # s3_mountable_bucket_keys = [aws_kms_key.default-storage.arn]
 }
 
 
@@ -152,7 +156,7 @@ module "k8tre-argocd-eks" {
   vpc_id          = module.vpc.vpc_id
   private_subnets = module.vpc.private_subnets
 
-  # k8s_version =
+  k8s_version = "1.35"
 
   # CIDRs that have access to the K8S API, e.g. `0.0.0.0/0`
   k8s_api_cidrs = local.allow_ips
@@ -168,7 +172,8 @@ module "k8tre-argocd-eks" {
   wg1_max_size = 1
 
   # autoupdate_ami = false
-  # autoupdate_addons = false
+  autoupdate_addons = var.eks_autoupdate_addons
+
   create_pod_identities = false
 
   argocd_create_role            = true

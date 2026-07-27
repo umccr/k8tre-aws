@@ -48,3 +48,9 @@ output "dns_validation_records" {
   description = "DNS validation records to be created for ACM certificate"
   value       = module.certificate[*].dns_validation_records
 }
+
+# Disabled with aws_s3_bucket.studydata in services.tf
+# output "s3_studydata_bucket_name" {
+#   description = "Name of the S3 studydata bucket"
+#   value       = aws_s3_bucket.studydata.id
+# }

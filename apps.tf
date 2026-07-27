@@ -166,10 +166,17 @@ resource "helm_release" "argocd" {
       name  = "configs.secret.argocdServerAdminPassword"
       value = terraform_data.argocd_password_bcrypt.output
     },
-    var.argocd_load_balancer ? [{
-      name  = "server.service.type"
-      value = "LoadBalancer"
-    }] : [],
+    var.argocd_load_balancer ? concat(
+      [{
+        name  = "server.service.type"
+        value = "LoadBalancer"
+      }],
+      # Restrict who can reach the ArgoCD UI/API.
+      [for i, cidr in local.allow_ips : {
+        name  = "server.service.loadBalancerSourceRanges[${i}]"
+        value = cidr
+      }]
+    ) : [],
   ])
 
   # Specify the custom plugin extra containers and volumes.

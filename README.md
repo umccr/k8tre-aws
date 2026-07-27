@@ -250,8 +250,3 @@ prek (or pre-commit) will run some autoformatters, and TFlint.
 | <a name="output_vpc_cidr"></a> [vpc\_cidr](#output\_vpc\_cidr) | VPC CIDR |
 <!-- END_TF_DOCS -->
 <!-- prettier-ignore-end -->
-
-ervices running on K8s |
-| <a name="output_vpc_cidr"></a> [vpc\_cidr](#output_vpc_cidr) | VPC CIDR |
-<!-- END_TF_DOCS -->
-<!-- prettier-ignore-end -->

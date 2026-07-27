@@ -122,6 +122,60 @@ Either
 
 - Create an EC2 desktop instance or workspace attached to the VPC and connect to `https://portal.k8tre.example.org`
 - Create an external application load balancer, see https://github.com/k8tre/k8tre-aws/issues/32
+- Tunnel to the internal load balancer from your own machine, see [Quick demo access](#quick-demo-access)
+
+## Quick demo access
+
+Notes for bringing up a demo of the `dev` deployment
+(cluster `k8tre-dev`, region `ap-southeast-2`, domain `guardians.umccr.org`).
+
+### Create the kubeconfig contexts
+
+```sh
+aws eks update-kubeconfig --region ap-southeast-2 --name k8tre-dev --alias k8tre-dev
+aws eks update-kubeconfig --region ap-southeast-2 --name k8tre-dev-argocd --alias k8tre-dev-argocd
+```
+
+The rest of these notes assume the two aliases above.
+
+### Forward to internal load balancer
+
+All K8TRE hostnames resolve only inside the VPC, i.e. private Route53 zone pointing at an internal ALB.
+`kubectl port-forward` cannot target the Cilium gateway Service directly because it has no endpoints as Cilium handles it in eBPF.
+Instead run a TCP forwarder in the cluster:
+
+```sh
+ALB=$(aws elbv2 describe-load-balancers --query "LoadBalancers[?Scheme=='internal'].DNSName | [0]" --output text)
+kubectl --context k8tre-dev -n gateway run k8tre-demo-tunnel --image=alpine/socat --restart=Never -- \
+  -d TCP-LISTEN:8443,fork,reuseaddr "TCP:$ALB:443"
+kubectl --context k8tre-dev -n gateway port-forward pod/k8tre-demo-tunnel 443:8443
+```
+
+The port-forward must bind local port 443 which is the registered OIDC redirect URIs contain no port.
+
+Then point the hostnames at the tunnel in your hosts file:
+
+```text
+127.0.0.1 portal.guardians.umccr.org
+127.0.0.1 keycloak.guardians.umccr.org
+127.0.0.1 jupyter.guardians.umccr.org
+127.0.0.1 guacamole.guardians.umccr.org
+```
+
+Browsers that use DNS-over-HTTPS bypass the OS resolver and hosts file entirely, so this should be disabled if configured.
+
+### Log in
+
+Open `https://portal.guardians.umccr.org`, and log in with the demo user `trevolution` and password `k8tre`.
+
+
+### Clean up
+
+```sh
+kubectl --context k8tre-dev -n gateway delete pod k8tre-demo-tunnel
+```
+
+Remove the hosts file entries.
 
 ## K8TRE deployment overview
 
